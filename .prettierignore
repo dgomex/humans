@@ -1,0 +1,10 @@
+node_modules
+.expo
+dist
+package-lock.json
+src/types/database.ts
+supabase/.temp
+supabase/.branches
+*.md
+assets
+supabase/config.toml
