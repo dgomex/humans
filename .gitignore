@@ -49,3 +49,6 @@ example
 # supabase
 supabase/.temp
 supabase/.branches
+
+# local test accounts (scripts/create-test-user.mjs)
+.test-users.local.json

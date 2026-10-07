@@ -5,7 +5,9 @@ import { useTheme } from '@/theme';
 
 import { Text } from './Text';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'danger';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'outline' | 'outlinePrimary' | 'text' | 'danger';
+export type ButtonShape = 'rounded' | 'pill';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export type ButtonProps = {
@@ -13,6 +15,8 @@ export type ButtonProps = {
   onPress?: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** `pill` = fully rounded (Instagram's auth screens). */
+  shape?: ButtonShape;
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
@@ -26,13 +30,15 @@ const heights: Record<ButtonSize, number> = { sm: 32, md: 36, lg: 44 };
 
 /**
  * Instagram-style button: primary = blue fill (Follow/Log in), secondary = grey fill
- * (Following/Edit profile/Message), outline, text (blue link), danger (red text).
+ * (Following/Edit profile/Message), outline, outlinePrimary (blue border + text, e.g. "Create new
+ * account"), text (blue link), danger (red text).
  */
 export function Button({
   title,
   onPress,
   variant = 'primary',
   size = 'md',
+  shape = 'rounded',
   disabled = false,
   loading = false,
   fullWidth = false,
@@ -47,6 +53,7 @@ export function Button({
     primary: colors.primary,
     secondary: colors.backgroundSecondary,
     outline: 'transparent',
+    outlinePrimary: 'transparent',
     text: 'transparent',
     danger: 'transparent',
   };
@@ -54,6 +61,7 @@ export function Button({
     primary: colors.onPrimary,
     secondary: colors.text,
     outline: colors.text,
+    outlinePrimary: colors.primary,
     text: colors.primary,
     danger: colors.danger,
   };
@@ -70,18 +78,19 @@ export function Button({
         {
           height: heights[size],
           paddingHorizontal: variant === 'text' ? 0 : spacing.lg,
-          borderRadius: radius.md,
+          borderRadius: shape === 'pill' ? radius.pill : radius.md,
           backgroundColor:
             pressed && variant === 'primary'
               ? colors.primaryPressed
               : pressed && variant === 'secondary'
                 ? colors.backgroundPressed
                 : bg[variant],
-          borderWidth: variant === 'outline' ? hairline * 2 : 0,
-          borderColor: colors.separator,
+          borderWidth: variant === 'outline' || variant === 'outlinePrimary' ? hairline * 2 : 0,
+          borderColor: variant === 'outlinePrimary' ? colors.primary : colors.separator,
           opacity: disabled
             ? 0.5
-            : pressed && (variant === 'text' || variant === 'danger')
+            : pressed &&
+                (variant === 'text' || variant === 'danger' || variant === 'outlinePrimary')
               ? 0.5
               : 1,
           alignSelf: fullWidth ? 'stretch' : 'auto',

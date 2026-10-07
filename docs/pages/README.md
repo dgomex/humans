@@ -8,15 +8,23 @@ Single source of truth for progress. Update after **every** workflow step.
 ## Current focus
 **Phase 0 — Foundation:** built and checked locally (2026-10-05). Two items still open:
 - **On-device check:** no Android SDK on the dev machine, and an iOS simulator needs macOS. Verified so far: both native bundles compile (`expo export`), the web build was clicked through in light and dark mode, and storage RLS was tested with two users (`node scripts/test-storage-rls.mjs`). Still to do: open in Expo Go on a real Android phone and iPhone.
-- **Hosted Supabase project:** not created or linked yet. Waiting on the user's go-ahead; local development doesn't need it.
+- **Hosted Supabase project:** deferred by the user (2026-10-05); local stack only for now.
 
-Next: Phase 1 — Onboarding & Authentication (`/start-phase 1`).
+**Phase 1 — Onboarding & Authentication:** pages 1–13 and 15 built (2026-10-07); page 14 (2FA) deferred to Phase 11.
+- Verified: `node scripts/test-auth-flow.mjs` (33 checks: sign-up, login by username/email, errors, recovery, RLS between two users), `node scripts/test-storage-rls.mjs` (19), DB lint clean, both native bundles compile, and the whole flow clicked through on web (light + dark): sign-up → onboarding → Home, add account → switch → logout → one-tap login, forgot password → reset.
+- **On iPhone (Expo Go):** password login confirmed working (2026-10-07) after fixing the keychain session storage bug (chunking regex). 
+- **Still to verify on a real phone (Expo Go):** native date picker (iOS wheel / Android dialog), photo upload (camera + library), contact sync, Profile-tab long-press, keychain session storage. Web can't exercise these.
+- Test accounts: `node scripts/create-test-user.mjs <username>` (logins go to git-ignored `.test-users.local.json`).
+
+Next: finish the on-device check of Phase 1, then Phase 2 — Profile (`/start-phase 2`).
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
 
 | Object | Created for page | Owning phase | Status |
 |---|---|---|---|
+| `follows` table (follower/following, select-all, insert/delete own) + `useFollow`, `FollowButton` | 011 | 2 — Profile | Stub: Phase 2 adds follow requests for private accounts, counts, notifications |
+| Own-profile placeholder (username ▾ switcher, temporary Log out) | 015 | 2 — Profile (page 16) / 11 — Settings (log out) | Stub |
 
 ## Phase 0 — Foundation
 
@@ -25,7 +33,7 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Expo app scaffold (TS, Expo Router, ESLint/Prettier) | ☑ Expo SDK 57, RN 0.86, React Compiler on |
 | Theme tokens (light/dark), icons, fonts | ☑ `src/theme/`; `Icon` registry (Ionicons/MaterialCommunityIcons); system fonts |
 | Shared components: Avatar, Button, BottomSheet, Toast | ☑ plus `Text`, `Icon`; demo at `/dev/ui` (dev only) |
-| Supabase local CLI + project link + `src/lib/supabase.ts` | ◐ local stack + client ☑; hosted project link pending the user's approval |
+| Supabase local CLI + project link + `src/lib/supabase.ts` | ☑ local stack + client; hosted project deferred (user decision) |
 | Storage buckets + storage RLS + `src/lib/storage.ts` | ☑ migration `20261005165703_phase0_storage_buckets.sql`; 19/19 two-user RLS checks pass |
 | Generated DB types + TanStack Query setup | ☑ `npm run db:types`; `src/lib/queryClient.ts`, `useMediaUrl` |
 | Bottom tab shell (Home · Explore · Create · Reels · Profile) | ☑ Create opens the `/create-entry` modal |
@@ -35,21 +43,21 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 1 | Splash / Launch screen | — | ☐ | — | ☐ | ☐ |
-| 2 | Welcome / Landing (Log in vs. Create account) | — | ☐ | — | ☐ | ☐ |
-| 3 | Log in | — | ☐ | — | ☐ | ☐ |
-| 4 | Sign up – phone or email entry | — | ☐ | — | ☐ | ☐ |
-| 5 | Sign up – confirmation code | — | ☐ | — | ☐ | ☐ |
-| 6 | Sign up – full name & password | — | ☐ | — | ☐ | ☐ |
-| 7 | Sign up – birthday | — | ☐ | — | ☐ | ☐ |
-| 8 | Sign up – username | — | ☐ | — | ☐ | ☐ |
-| 9 | Sign up – terms & policies agreement | — | ☐ | — | ☐ | ☐ |
-| 10 | Sign up – add profile photo | — | ☐ | — | ☐ | ☐ |
-| 11 | Sign up – find contacts / follow suggestions | — | ☐ | — | ☐ | ☐ |
-| 12 | Forgot password / account recovery | — | ☐ | — | ☐ | ☐ |
-| 13 | Reset password | — | ☐ | — | ☐ | ☐ |
-| 14 | Two-factor authentication code entry | — | ☐ | — | ☐ | ☐ |
-| 15 | Account switcher (multiple accounts) sheet | — | ☐ | — | ☐ | ☐ |
+| 1 | Splash / Launch screen | [spec](001-splash.md) | ☑ | Full clone | ☑ | ◐ |
+| 2 | Welcome / Landing (Log in vs. Create account) | [spec](002-welcome.md) | ☑ | Full clone | ☑ | ◐ |
+| 3 | Log in | [spec](003-login.md) | ☑ | Full clone | ☑ | ◐ |
+| 4 | Sign up – phone or email entry | [spec](004-signup-contact.md) | ☑ | Changes | ☑ | ◐ |
+| 5 | Sign up – confirmation code | [spec](005-signup-code.md) | ☑ | Changes | ☑ | ◐ |
+| 6 | Sign up – full name & password | [spec](006-signup-name-password.md) | ☑ | Full clone | ☑ | ◐ |
+| 7 | Sign up – birthday | [spec](007-signup-birthday.md) | ☑ | Changes | ☑ | ◐ |
+| 8 | Sign up – username | [spec](008-signup-username.md) | ☑ | Full clone | ☑ | ◐ |
+| 9 | Sign up – terms & policies agreement | [spec](009-signup-terms.md) | ☑ | Full clone | ☑ | ◐ |
+| 10 | Sign up – add profile photo | [spec](010-signup-profile-photo.md) | ☑ | Changes | ☑ | ◐ |
+| 11 | Sign up – find contacts / follow suggestions | [spec](011-signup-find-people.md) | ☑ | Full clone | ☑ | ◐ |
+| 12 | Forgot password / account recovery | [spec](012-forgot-password.md) | ☑ | Changes | ☑ | ◐ |
+| 13 | Reset password | [spec](013-reset-password.md) | ☑ | Full clone | ☑ | ◐ |
+| 14 | Two-factor authentication code entry | [spec](014-two-factor-code.md) | ☑ | Deferred | — | — |
+| 15 | Account switcher (multiple accounts) sheet | [spec](015-account-switcher.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 2 — Profile
 

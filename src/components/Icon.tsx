@@ -45,6 +45,18 @@ const glyphs = {
   alert: { set: 'ion', name: 'alert-circle-outline' },
   lock: { set: 'ion', name: 'lock-closed-outline' },
   person: { set: 'ion', name: 'person' },
+  eye: { set: 'ion', name: 'eye-outline' },
+  eyeOff: { set: 'ion', name: 'eye-off-outline' },
+  globe: { set: 'ion', name: 'globe-outline' },
+  contacts: { set: 'ion', name: 'people-circle-outline' },
+  image: { set: 'ion', name: 'image-outline' },
+  cameraFilled: { set: 'ion', name: 'camera' },
+  trash: { set: 'ion', name: 'trash-outline' },
+  radioOn: { set: 'ion', name: 'radio-button-on' },
+  radioOff: { set: 'ion', name: 'radio-button-off' },
+  checkbox: { set: 'ion', name: 'checkbox' },
+  checkboxOff: { set: 'ion', name: 'square-outline' },
+  logout: { set: 'ion', name: 'log-out-outline' },
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof glyphs;

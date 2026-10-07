@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
+import { Platform } from 'react-native';
 
 import { supabase } from './supabase';
 
@@ -49,7 +50,11 @@ export async function uploadFile(
   localUri: string,
   { contentType, upsert = false }: UploadOptions,
 ): Promise<string> {
-  const body = await new File(localUri).arrayBuffer();
+  // Web pickers return blob:/data: URIs that expo-file-system can't open.
+  const body =
+    Platform.OS === 'web'
+      ? await (await fetch(localUri)).arrayBuffer()
+      : await new File(localUri).arrayBuffer();
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, body, { contentType, upsert });

@@ -30,7 +30,9 @@ export const chunkedSecureStorage = {
   },
   async setItem(key: string, value: string): Promise<void> {
     await removeChunks(key);
-    const chunks = value.match(new RegExp(`[\s\S]{1,${CHUNK_SIZE}}`, 'g')) ?? [''];
+    const chunks: string[] = [];
+    for (let i = 0; i < value.length; i += CHUNK_SIZE) chunks.push(value.slice(i, i + CHUNK_SIZE));
+    if (chunks.length === 0) chunks.push('');
     await Promise.all(chunks.map((c, i) => SecureStore.setItemAsync(chunkKey(key, i), c)));
     await SecureStore.setItemAsync(countKey(key), String(chunks.length));
   },

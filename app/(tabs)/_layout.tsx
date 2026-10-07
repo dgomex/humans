@@ -1,6 +1,13 @@
 import { Tabs, router } from 'expo-router';
+import { View } from 'react-native';
 
 import { Avatar, Icon, type IconName } from '@/components';
+import { useAuth } from '@/features/auth/AuthProvider';
+import {
+  AccountSwitcherProvider,
+  useAccountSwitcher,
+} from '@/features/auth/components/AccountSwitcher';
+import { avatarUrl } from '@/features/profile/avatar';
 import { useTheme } from '@/theme';
 
 function tabIcon(outline: IconName, filled: IconName) {
@@ -10,14 +17,36 @@ function tabIcon(outline: IconName, filled: IconName) {
   return TabIcon;
 }
 
+/** The signed-in user's avatar; outlined in the text color when the tab is active. */
 function ProfileTabIcon({ focused }: { focused: boolean }) {
-  // Phase 1/2 pass the signed-in user's avatar URI here.
-  return <Avatar size={26} ring={focused ? 'seen' : 'none'} />;
+  const { colors } = useTheme();
+  const { profile } = useAuth();
+  return (
+    <View
+      style={{
+        padding: 1.5,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: focused ? colors.text : 'transparent',
+      }}
+    >
+      <Avatar uri={avatarUrl(profile?.avatar_path)} size={26} />
+    </View>
+  );
 }
 
 /** Bottom tab shell: Home · Explore · Create · Reels · Profile (icons only, like Instagram). */
 export default function TabsLayout() {
+  return (
+    <AccountSwitcherProvider>
+      <TabsNavigator />
+    </AccountSwitcherProvider>
+  );
+}
+
+function TabsNavigator() {
   const { colors, hairline } = useTheme();
+  const switcher = useAccountSwitcher();
 
   return (
     <Tabs
@@ -56,7 +85,14 @@ export default function TabsLayout() {
         name="reels"
         options={{ title: 'Reels', tabBarIcon: tabIcon('reels', 'reelsFilled') }}
       />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ProfileTabIcon }} />
+      <Tabs.Screen
+        name="profile"
+        options={{ title: 'Profile', tabBarIcon: ProfileTabIcon }}
+        listeners={{
+          // Page 015: long-press the Profile tab to switch accounts.
+          tabLongPress: () => switcher.open(),
+        }}
+      />
     </Tabs>
   );
 }
