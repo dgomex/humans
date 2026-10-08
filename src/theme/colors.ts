@@ -35,6 +35,11 @@ export const lightColors = {
   toastBackground: '#262626',
   toastText: palette.white,
   skeleton: '#EFEFEF',
+  // Over photos/videos (same in both modes): icons, crop grid, tag bubbles, badges.
+  onMedia: palette.white,
+  mediaGrid: 'rgba(255,255,255,0.7)',
+  mediaScrim: 'rgba(0,0,0,0.6)',
+  mediaBackground: palette.black,
 } as const;
 
 export type ColorTokens = { [K in keyof typeof lightColors]: string };
@@ -63,6 +68,10 @@ export const darkColors: ColorTokens = {
   toastBackground: '#F5F5F5',
   toastText: palette.black,
   skeleton: '#262626',
+  onMedia: palette.white,
+  mediaGrid: 'rgba(255,255,255,0.7)',
+  mediaScrim: 'rgba(0,0,0,0.6)',
+  mediaBackground: palette.black,
 };
 
 /** Unread-story ring gradient (top-right → bottom-left). Same in both modes. */

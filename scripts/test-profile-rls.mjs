@@ -214,15 +214,26 @@ const c = await makeUser('c');
     .select()
     .single();
   check('A creates a collection', !col.error, col.error?.message);
+  // Collection items reference real posts since Phase 3: make a one-slide post for A.
+  const postId = randomUUID();
+  const path = `${a.id}/${postId}/0.jpg`;
+  await a.client.from('posts').insert({ id: postId });
+  await a.client.storage
+    .from('posts')
+    .upload(path, new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), { contentType: 'image/jpeg' });
+  await a.client
+    .from('post_media')
+    .insert({ post_id: postId, position: 0, type: 'image', path, width: 1, height: 1 });
+  await a.client.rpc('publish_post', { p_post: postId });
   const item = await a.client
     .from('saved_collection_items')
-    .insert({ collection_id: col.data.id, post_id: randomUUID() });
+    .insert({ collection_id: col.data.id, post_id: postId });
   check('A adds an item', !item.error, item.error?.message);
   const asB = await b.client.from('saved_collections').select('*');
   check("B cannot see A's collections", asB.data?.length === 0);
   const bItem = await b.client
     .from('saved_collection_items')
-    .insert({ collection_id: col.data.id, post_id: randomUUID() });
+    .insert({ collection_id: col.data.id, post_id: postId });
   check("B cannot add to A's collection", !!bItem.error);
   const empty = await a.client.from('saved_collections').insert({ name: '   ' });
   check('blank collection name rejected', !!empty.error);

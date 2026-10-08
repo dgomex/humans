@@ -27,6 +27,12 @@ Decisions agreed with the user. Append new entries; don't rewrite old ones (add 
 | 2026-10-08 | Phase 2 (tech) | Until Settings (Phase 11) and Activity (Phase 8) exist: ☰ opens a small temporary menu (Saved, Close Friends, Favorites, Follow requests, QR, Log out), Edit profile has a temporary Private switch, and follow requests are answered on a stub screen | Tracked in Prerequisite stubs |
 | 2026-10-08 | Phase 2 (tech) | Profile links / QR codes use `https://humans.app/<username>` as a placeholder origin (`PUBLIC_WEB_ORIGIN`) | Change when a real domain exists |
 
+| 2026-10-08 | Phase 3 | Post creation uses the OS photo picker (works in Expo Go everywhere); no image filters/adjustments; no locations; music = placeholder royalty-free catalog | See pages 32, 35, 38, 39 |
+| 2026-10-08 | Phase 3 (tech) | Uploads go straight from the device to Storage with a persisted client queue; posts stay `uploading` (invisible to others) until `publish_post` checks every file | Page 40 |
+| 2026-10-08 | Phase 3 (tech) | Videos (≤60 s) are uploaded as recorded with an on-device poster frame; no server transcoding or video filters. Photos are cropped + resized to 1080 px JPEG on the device | Media pipeline (cross-cutting) |
+| 2026-10-08 | Phase 3 (tech) | Until Phase 4/7/8 exist: a minimal own-post viewer stubs page 44, collaboration invites get a stub screen (☰ menu), and `hashtags` is a caption-parsed stub | Tracked in Prerequisite stubs |
+| 2026-10-08 | Phase 3 (tech) | Post visibility = `can_view_post` (author, collaborators, or published + not archived + `can_view_profile` + Close Friends membership); the posts bucket uses the same rule | Reuse for likes/comments/saves |
+
 ## Per-page decisions
 _Format: `| date | Page NNN – name | Full clone / Changes: … | spec link |`_
 
@@ -64,3 +70,14 @@ _Format: `| date | Page NNN – name | Full clone / Changes: … | spec link |`_
 | 2026-10-08 | Page 029 | Deferred: Not built in Phase 2. Sections land with their phases: interactions (4), posts/recently deleted (3), searches (7), time spent (11, page 103). | [spec](pages/029-your-activity.md) |
 | 2026-10-08 | Page 030 | Full clone: As specced. | [spec](pages/030-close-friends.md) |
 | 2026-10-08 | Page 031 | Full clone: As specced (max 50, only accounts you follow). | [spec](pages/031-favorites.md) |
+| 2026-10-08 | Page 032 | Changes: System photo picker only (OS picker, multi-select up to 20, ordered); no custom in-app gallery / album menu. The Create screen offers Library · Camera · Drafts. The POST/STORY/REEL/LIVE mode switcher waits for Phases 5/6/10. | [spec](pages/032-create-entry.md) |
+| 2026-10-08 | Page 033 | Full clone: As specced: tap = photo, hold = video (≤60 s), flip (button + double-tap), flash off/on/auto, pinch zoom, tap to focus. | [spec](pages/033-camera.md) |
+| 2026-10-08 | Page 034 | Full clone: Up to 20 photos **and videos** (≤60 s, uploaded as recorded + thumbnail, no server transcoding). Ratio from the first item (1:1 or original clamped 3:4…1.91:1), pinch/pan crop for photos; videos are center-cropped on display. | [spec](pages/034-multi-select-crop.md) |
+| 2026-10-08 | Page 035 | Changes: **No filters and no adjust tools.** The edit step keeps crop, the ratio toggle and the carousel strip (switch / reorder / remove). | [spec](pages/035-filters-edit.md) |
+| 2026-10-08 | Page 036 | Changes: Keep caption (2,200, ≤30 hashtags, ≤20 mentions) with @/# autocomplete, Tag people, **Collaborators** (≤5, accept/decline), **Audience** (Everyone / Close Friends), Music (page 39), Advanced: hide like/view counts, turn off commenting, alt text per slide. **Dropped:** Facebook/Threads sharing, location (page 38 dropped). | [spec](pages/036-new-post-details.md) |
+| 2026-10-08 | Page 037 | Full clone: As specced: positioned tags per slide, ≤20, list for video slides, self-untag. | [spec](pages/037-tag-people.md) |
+| 2026-10-08 | Page 038 | Dropped: No locations on posts for now (no place data source). Revisit with the Place page (69, Phase 7). | [spec](pages/038-location-search.md) |
+| 2026-10-08 | Page 039 | Changes: Royalty-free seed catalog in a public `audio` bucket with the full picker (search, For you / Saved, preview, clip start). Tracks are **generated placeholder loops** (synthesized by a script, no downloads); real CC0 tracks can replace them later. | [spec](pages/039-music-picker.md) |
+| 2026-10-08 | Page 040 | Full clone: As specced, including the persisted queue that resumes after an app restart, auto-retry when back online, Retry / Discard / Save draft on failure. | [spec](pages/040-upload-progress.md) |
+| 2026-10-08 | Page 041 | Changes: Edit caption, tags, alt text; delete and reorder carousel slides; Hide like count; Turn off commenting; **Archive + posts archive** (posts part of page 28); **Pin to profile** (≤3). **No Recently deleted**: Delete is immediate. A minimal own-post viewer stub (page 44) opens from grid tiles. | [spec](pages/041-edit-post.md) |
+| 2026-10-08 | Page 042 | Full clone: Device-only drafts like Instagram (per account, media copied into app storage): Save draft? on exit, Drafts row in Create, Manage → discard. | [spec](pages/042-drafts.md) |

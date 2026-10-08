@@ -1,8 +1,8 @@
-import { File } from 'expo-file-system';
+import { File, UploadType } from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
-import { supabase } from './supabase';
+import { supabase, supabaseConfig } from './supabase';
 
 /**
  * Supabase Storage helpers (our "S3"). Bucket layout + access rules: docs/ARCHITECTURE.md.
@@ -16,20 +16,26 @@ export const BUCKETS = {
   stories: 'stories',
   messages: 'messages',
   highlightCovers: 'highlights-covers',
+  audio: 'audio',
 } as const;
 
 export type Bucket = (typeof BUCKETS)[keyof typeof BUCKETS];
 
 /** Buckets served by public URL; everything else needs a signed URL. */
-export const PUBLIC_BUCKETS: readonly Bucket[] = [BUCKETS.avatars, BUCKETS.highlightCovers];
+export const PUBLIC_BUCKETS: readonly Bucket[] = [
+  BUCKETS.avatars,
+  BUCKETS.highlightCovers,
+  BUCKETS.audio,
+];
 
 /** Default lifetime for signed URLs (seconds). */
 export const SIGNED_URL_TTL = 60 * 60;
 
 export const storagePaths = {
   avatar: (userId: string, ext = 'jpg') => `${userId}/${Crypto.randomUUID()}.${ext}`,
-  postMedia: (userId: string, postId: string, index: number, ext: string) =>
-    `${userId}/${postId}/${index}.${ext}`,
+  /** `file` is the slide's media id (stable across reorders), plus `-thumb` for video posters. */
+  postMedia: (userId: string, postId: string, file: string, ext: string) =>
+    `${userId}/${postId}/${file}.${ext}`,
   reelVideo: (userId: string, reelId: string) => `${userId}/${reelId}/video.mp4`,
   reelCover: (userId: string, reelId: string) => `${userId}/${reelId}/cover.jpg`,
   story: (userId: string, storyId: string, ext: string) => `${userId}/${storyId}.${ext}`,
@@ -60,6 +66,57 @@ export async function uploadFile(
     .upload(path, body, { contentType, upsert });
   if (error) throw error;
   return data.path;
+}
+
+/**
+ * Upload with byte progress (post media, page 40). Native streams the file with an
+ * expo-file-system upload task straight to the Storage REST API; web falls back to
+ * `uploadFile` (progress jumps to done). Always upserts so a retried upload is idempotent.
+ */
+export async function uploadFileWithProgress(
+  bucket: Bucket,
+  path: string,
+  localUri: string,
+  contentType: string,
+  onProgress?: (sent: number, total: number) => void,
+): Promise<void> {
+  if (Platform.OS === 'web') {
+    await uploadFile(bucket, path, localUri, { contentType, upsert: true });
+    onProgress?.(1, 1);
+    return;
+  }
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('not_authenticated');
+  const encoded = path.split('/').map(encodeURIComponent).join('/');
+  const result = await new File(localUri).upload(
+    `${supabaseConfig.url}/storage/v1/object/${bucket}/${encoded}`,
+    {
+      httpMethod: 'POST',
+      uploadType: UploadType.BINARY_CONTENT,
+      mimeType: contentType,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseConfig.key,
+        'Content-Type': contentType,
+        'x-upsert': 'true',
+      },
+      onProgress: (p) => onProgress?.(p.bytesSent, p.totalBytes),
+    },
+  );
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`upload_failed_${result.status}: ${result.body.slice(0, 200)}`);
+  }
+}
+
+/** Size of a local file in bytes (0 when unknown, e.g. web blob URIs). */
+export function localFileSize(uri: string): number {
+  if (Platform.OS === 'web') return 0;
+  try {
+    return new File(uri).size ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 /** Public URL for objects in public buckets (avatars, highlight covers). */

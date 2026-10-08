@@ -10,14 +10,18 @@ export function PlaceholderScreen({
   title,
   note,
   children,
+  header,
 }: {
   title: string;
   note: string;
   children?: ReactNode;
+  /** Shown above the placeholder (e.g. the Home upload banner). */
+  header?: ReactNode;
 }) {
   const { colors, spacing } = useTheme();
   return (
     <SafeAreaView edges={['top']} style={[styles.flex, { backgroundColor: colors.background }]}>
+      {header}
       <View style={[styles.center, { gap: spacing.md, padding: spacing.xl }]}>
         <Text variant="headline">{title}</Text>
         <Text color="textSecondary" style={styles.centerText}>

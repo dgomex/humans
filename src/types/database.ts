@@ -36,6 +36,19 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"audio_tracks": {
+                  Row: {
+                    "artist": string,"audio_path": string,"cover_color": string,"created_at": string,"duration_ms": number,"id": string,"license": string,"source": string,"title": string
+                  }
+                  Insert: {
+                    "artist": string,"audio_path": string,"cover_color"?: string,"created_at"?: string,"duration_ms": number,"id"?: string,"license"?: string,"source"?: string,"title": string
+                  }
+                  Update: {
+                    "artist"?: string,"audio_path"?: string,"cover_color"?: string,"created_at"?: string,"duration_ms"?: number,"id"?: string,"license"?: string,"source"?: string,"title"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"close_friends": {
                   Row: {
                     "created_at": string,"friend_id": string,"owner_id": string
@@ -149,6 +162,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"hashtags": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"post_count": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"post_count"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"post_count"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"highlights": {
                   Row: {
                     "cover_path": string | null,"created_at": string,"id": string,"owner_id": string,"position": number,"title": string,"updated_at": string
@@ -163,6 +189,162 @@ isOneToOne: false
                     {
       foreignKeyName: "highlights_owner_id_fkey"
       columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_collaborators": {
+                  Row: {
+                    "invited_at": string,"post_id": string,"responded_at": string | null,"status": string,"user_id": string
+                  }
+                  Insert: {
+                    "invited_at"?: string,"post_id": string,"responded_at"?: string | null,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "invited_at"?: string,"post_id"?: string,"responded_at"?: string | null,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_collaborators_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_collaborators_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_hashtags": {
+                  Row: {
+                    "hashtag_id": string,"post_id": string
+                  }
+                  Insert: {
+                    "hashtag_id": string,"post_id": string
+                  }
+                  Update: {
+                    "hashtag_id"?: string,"post_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_hashtags_hashtag_id_fkey"
+      columns: ["hashtag_id"]
+isOneToOne: false
+      referencedRelation: "hashtags"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_hashtags_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_media": {
+                  Row: {
+                    "alt_text": string | null,"author_id": string,"created_at": string,"duration_ms": number | null,"height": number,"id": string,"path": string,"position": number,"post_id": string,"thumb_path": string | null,"type": string,"width": number
+                  }
+                  Insert: {
+                    "alt_text"?: string | null,"author_id"?: string,"created_at"?: string,"duration_ms"?: number | null,"height": number,"id"?: string,"path": string,"position": number,"post_id": string,"thumb_path"?: string | null,"type": string,"width": number
+                  }
+                  Update: {
+                    "alt_text"?: string | null,"author_id"?: string,"created_at"?: string,"duration_ms"?: number | null,"height"?: number,"id"?: string,"path"?: string,"position"?: number,"post_id"?: string,"thumb_path"?: string | null,"type"?: string,"width"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_media_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_media_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_mentions": {
+                  Row: {
+                    "created_at": string,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_mentions_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_mentions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_tags": {
+                  Row: {
+                    "created_at": string,"id": string,"media_id": string,"post_id": string,"tagged_user_id": string,"x": number | null,"y": number | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"media_id": string,"post_id": string,"tagged_user_id": string,"x"?: number | null,"y"?: number | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"media_id"?: string,"post_id"?: string,"tagged_user_id"?: string,"x"?: number | null,"y"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_tags_media_id_fkey"
+      columns: ["media_id"]
+isOneToOne: false
+      referencedRelation: "post_media"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_tags_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_tags_tagged_user_id_fkey"
+      columns: ["tagged_user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"posts": {
+                  Row: {
+                    "archived_at": string | null,"aspect_ratio": number,"audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"caption": string,"comments_disabled": boolean,"created_at": string,"edited_at": string | null,"hide_like_counts": boolean,"id": string,"pinned_at": string | null,"published_at": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"pinned_at"?: string | null,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"pinned_at"?: string | null,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "posts_audio_track_id_fkey"
+      columns: ["audio_track_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "posts_author_id_fkey"
+      columns: ["author_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -206,6 +388,31 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"saved_audio": {
+                  Row: {
+                    "created_at": string,"track_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"track_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"track_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_audio_track_id_fkey"
+      columns: ["track_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "saved_audio_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"saved_collection_items": {
                   Row: {
                     "collection_id": string,"created_at": string,"post_id": string
@@ -223,6 +430,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "saved_collections"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "saved_collection_items_post_fk"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
     }
                   ]
                 },"saved_collections": {
@@ -237,6 +450,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "saved_collections_cover_post_fk"
+      columns: ["cover_post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "saved_collections_owner_id_fkey"
       columns: ["owner_id"]
 isOneToOne: false
@@ -282,6 +501,12 @@ isOneToOne: false
               "email": string,"has_profile": boolean,"user_id": string,"username": string
             }[]
                            },
+"can_view_post":
+{ Args: { "p_post": string }; Returns: boolean
+                           },
+"can_view_post_object":
+{ Args: { "object_name": string }; Returns: boolean
+                           },
 "can_view_profile":
 { Args: { "target": string }; Returns: boolean
                            },
@@ -314,11 +539,19 @@ isOneToOne: false
               "avatar_path": string,"bio": string,"can_view": boolean,"created_at": string,"followers_count": number,"following_count": number,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"is_private": boolean,"is_self": boolean,"links": Json,"mutual_count": number,"mutual_preview": Json,"posts_count": number,"requested": boolean,"username": string
             }[]
                            },
+"is_valid_caption":
+{ Args: { "caption": string }; Returns: boolean
+                           },
 "is_valid_profile_links":
 { Args: { "links": Json }; Returns: boolean
                            },
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
+                           },
+"my_collab_invites":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "author_avatar_path": string,"author_id": string,"author_username": string,"cover_path": string,"invited_at": string,"post_id": string
+            }[]
                            },
 "people_picker":
 { Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
@@ -330,6 +563,28 @@ isOneToOne: false
               "avatar_path": string,"followed_at": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"is_self": boolean,"requested": boolean,"username": string
             }[]
                            },
+"profile_posts":
+{ Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_user": string }; Returns: {
+              "archived_at": string,"audience": string,"author_id": string,"cover_path": string,"cover_type": string,"id": string,"is_pinned": boolean,"media_count": number,"published_at": string
+            }[]
+                           },
+"publish_post":
+{ Args: { "p_post": string }; Returns: string
+                           },
+"refresh_posts_count":
+{ Args: { "p_user": string }; Returns: undefined
+                           },
+"reorder_post_media":
+{ Args: { "p_media": (string)[],"p_post": string }; Returns: undefined
+                           },
+"respond_collab_invite":
+{ Args: { "p_accept": boolean,"p_post": string }; Returns: boolean
+                           },
+"search_profiles":
+{ Args: { "p_limit"?: number,"p_query": string }; Returns: {
+              "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"username": string
+            }[]
+                           },
 "suggest_usernames":
 { Args: { "full_name": string,"max_count"?: number }; Returns: (string)[]
                            },
@@ -337,6 +592,9 @@ isOneToOne: false
 { Args: { "max_count"?: number }; Returns: {
               "avatar_path": string,"full_name": string,"id": string,"is_private": boolean,"reason": string,"username": string
             }[]
+                           },
+"sync_post_caption_refs":
+{ Args: { "p_caption": string,"p_post": string }; Returns: undefined
                            },
 "unfollow_user":
 { Args: { "target": string }; Returns: undefined

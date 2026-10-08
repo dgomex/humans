@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
 
 import { Avatar, Button, Icon, Text, useToast, type IconName } from '@/components';
 import { FollowButton } from '@/features/follows/FollowButton';
+import { postKeys } from '@/features/posts/api';
 import { useTheme } from '@/theme';
 
 import {
@@ -52,7 +54,9 @@ export function ProfileView({
   const [tab, setTab] = useState<ProfileTabKey>('grid');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const pager = useRef<ScrollView>(null);
+  const loadMore = useRef<(() => void) | null>(null);
   const { width } = useWindowDimensions();
+  const qc = useQueryClient();
 
   function selectTab(next: ProfileTabKey) {
     setTab(next);
@@ -62,7 +66,23 @@ export function ProfileView({
   return (
     <ScrollView
       stickyHeaderIndices={locked ? undefined : [1]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            void qc.invalidateQueries({ queryKey: postKeys.all });
+            onRefresh();
+          }}
+        />
+      }
+      scrollEventThrottle={200}
+      onScroll={(e) => {
+        // Next page of the active grid when near the bottom.
+        const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+        if (layoutMeasurement.height + contentOffset.y > contentSize.height - 600) {
+          loadMore.current?.();
+        }
+      }}
       style={{ backgroundColor: colors.background }}
     >
       <View style={{ paddingBottom: spacing.md }}>
@@ -83,7 +103,14 @@ export function ProfileView({
       {locked ? (
         <SuggestedStrip title="Suggested for you" />
       ) : (
-        <ProfileTabPages pagerRef={pager} active={tab} onSwipe={setTab} isOwn={isOwn} />
+        <ProfileTabPages
+          pagerRef={pager}
+          active={tab}
+          onSwipe={setTab}
+          isOwn={isOwn}
+          userId={profile.id}
+          loadMoreRef={loadMore}
+        />
       )}
     </ScrollView>
   );
@@ -114,12 +141,12 @@ function Identity({ profile }: { profile: ProfileDetails }) {
         <Avatar
           uri={avatarUrl(profile.avatar_path)}
           size={AVATAR}
-          onPress={isOwn ? () => router.push('/create-entry') : undefined}
+          onPress={isOwn ? () => router.push('/compose') : undefined}
           accessibilityLabel={isOwn ? 'Add to your story' : `${profile.username}'s profile picture`}
         />
         {isOwn ? (
           <Pressable
-            onPress={() => router.push('/create-entry')}
+            onPress={() => router.push('/compose')}
             accessibilityRole="button"
             accessibilityLabel="Add to your story"
             style={[

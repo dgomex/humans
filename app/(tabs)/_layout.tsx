@@ -77,7 +77,7 @@ function TabsNavigator() {
           // Create is not a destination tab: it opens the creation flow as a modal.
           tabPress: (e) => {
             e.preventDefault();
-            router.push('/create-entry');
+            router.push('/compose');
           },
         }}
       />

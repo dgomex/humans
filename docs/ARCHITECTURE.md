@@ -22,7 +22,13 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   qr/{index,scan}                     # page 24 (full-screen modals)
   follow-requests                     # STUB of page 72 (Phase 8)
   highlights/new                      # placeholder until the Phase 5 editor
-  (modals)/               # modal routes: create-entry (Phase 3), comments, share, options…
+  compose/                # Phase 3 creation flow (full-screen modal, own Stack + ComposerProvider):
+    index (32 entry: Library · Camera · Drafts), camera (33), edit (34/35 crop + strip),
+    details (36), tag-people (37), collaborators, music (39), advanced, alt-text, drafts (42)
+  p/[id]/{index,edit}     # STUB of page 44 (own-post ⋯ menu) + Edit info (41)
+  archive                 # posts archive (page 28, posts part)
+  collab-invites          # STUB until Activity (page 71): collaboration invites
+  (modals)/               # future modal routes: comments, share, options…
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
   p/[id].tsx, reel/[id].tsx, stories/[userId].tsx, direct/…   # future
 src/
@@ -35,12 +41,17 @@ src/
   features/profile/       # api.ts (get_profile, follow actions, lists, close friends/favorites, bell, follow requests), format.ts (counts, profile URLs, openProfile),
                           # avatar.ts, saveQrImage(.web).ts, components/ (ProfileView, ProfileTabs, BioText, HighlightsRow, SuggestedStrip, ProfileSheets, ChangePhotoSheet, PeoplePickerList, TopBar)
   features/saved/         # api.ts (collections), CollectionTile
+  features/create/        # Phase 3: ComposerProvider (flow state), types.ts, media.ts (OS picker, crop math, renderPhoto, video posters),
+                          # UploadQueue (persisted per-account queue, page 40), drafts.ts + localFiles.ts (device-only), useOpenLibrary,
+                          # useSaveDraftGuard, components/ (CropView, CroppedImage, SortableStrip, UploadBanner)
+  features/posts/         # api.ts (profile_posts grids, usePost, flags, edits, collab invites, search_profiles, hashtags, music catalog),
+                          # components/ (CaptionInput @/# autocomplete, CaptionText, TagEditor, PersonSearchSheet, MediaCarousel, LoopingVideo)
   lib/navigation.ts       # goBack(fallback): back, or replace when there's no history (deep links / reloads)
   lib/useDebounced.ts     # debounced value (search fields)
   lib/dialog.ts           # showDialog(): native Alert, browser confirm/alert on web — use instead of Alert
   lib/supabase.ts         # supabase-js client (publishable key + chunked SecureStore session)
   lib/secureStorage.ts    # Keychain/Keystore adapter (chunks values >1.8 KB)
-  lib/storage.ts          # BUCKETS, storagePaths, upload/public/signed URL helpers
+  lib/storage.ts          # BUCKETS, storagePaths, upload/public/signed URL helpers, uploadFileWithProgress (native upload task)
   lib/useMediaUrl.ts      # cached public/signed URL hook
   lib/queryClient.ts      # TanStack Query client + AppState focus
   theme/                  # tokens: colors (light/dark), spacing/radius, typography; useTheme()
@@ -49,6 +60,8 @@ scripts/
   test-storage-rls.mjs    # two-user storage RLS check against the local stack
   test-auth-flow.mjs      # Phase 1 end-to-end auth + RLS check (reads codes from Mailpit)
   test-profile-rls.mjs    # Phase 2 privacy / follows / lists / collections RLS check (three fresh users)
+  test-posts-rls.mjs      # Phase 3 posts / media / tags / collaborators / archive / pin RLS check (three fresh users)
+  seed-audio.mjs          # synthesize + upload the placeholder music catalog (re-run after db reset)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
 supabase/
   config.toml
@@ -93,11 +106,12 @@ docs/                     # PLAN, ARCHITECTURE, DECISIONS, pages/, EXPO_AGENTS.m
 | Bucket | Visibility | Path pattern |
 |---|---|---|
 | `avatars` | public | `{user_id}/{uuid}.jpg` |
-| `posts` | private (signed URLs; respects private accounts) | `{user_id}/{post_id}/{index}.{ext}` |
+| `posts` | private (signed URLs; `can_view_post`) | `{user_id}/{post_id}/{media_id}.{jpg\|mp4\|mov}`, video poster `{media_id}-thumb.jpg` |
 | `reels` | private | `{user_id}/{reel_id}/video.mp4`, `cover.jpg` |
 | `stories` | private, expire after 24h (archive kept) | `{user_id}/{story_id}.{ext}` |
 | `messages` | private (thread participants only) | `{thread_id}/{message_id}.{ext}` |
 | `highlights-covers` | public | `{user_id}/{highlight_id}.jpg` |
+| `audio` | public | `placeholder/{slug}.wav` (catalog, written by the service role only) |
 
 The first path segment is the owner id, and storage RLS policies check it against `auth.uid()`.
 
@@ -107,7 +121,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | Object | Type | Created by (page/phase) | Notes |
 |---|---|---|---|
 | `avatars` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write/select via API; anyone reads by public URL |
-| `posts` | bucket (private, 100 MB, image+video) | Phase 0 | Owner-only. **Phase 3/2 must add** a select policy for followers/public accounts |
+| `posts` | bucket (private, 100 MB, image+video) | Phase 0 | Owner write. Viewer select `posts_select_viewer` (Phase 3) = `can_view_post_object(name)` |
 | `reels` | bucket (private, 100 MB, video+cover image) | Phase 0 | Owner-only. **Phase 6 adds** viewer select policy |
 | `stories` | bucket (private, 50 MB, image+video) | Phase 0 | Owner-only. **Phase 5 adds** viewer select (24h, close friends) |
 | `messages` | bucket (private, 50 MB, image/video/audio/gif) | Phase 0 | **No policies = deny all.** Phase 9 adds thread-participant policies (path `{thread_id}/…`) |
@@ -140,3 +154,19 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `set_updated_at()` | trigger function | Phase 1 | profiles.updated_at |
 | `unaccent` | extension (schema extensions) | Phase 1 | |
 | `account-auth` | Edge Function (verify_jwt off, publishable key) | Phase 1 (pages 003/004/012) | lookup, login, recover-start, recover-verify |
+| `posts` | table | Phase 3 (pages 36/40/41) | author_id, caption (`is_valid_caption`: ≤2,200, ≤30 #, ≤20 @), aspect_ratio 0.75–1.91, status `uploading`→`published` (only via `publish_post`), audience everyone/close_friends, hide_like_counts, comments_disabled, audio_track_id + audio_start_ms, archived_at, pinned_at (≤3), published_at, edited_at. RLS select `can_view_post(id)`; insert own as uploading; update own (column grants: caption, hide_like_counts, comments_disabled, archived_at, pinned_at); delete own. Triggers: archive unpins, pin limit, edited_at, posts_count, caption refs |
+| `post_media` | table | Phase 3 | post_id, author_id, position 0–19 (unique, deferrable), type image/video, path/thumb_path (must be `{uid}/{post}/…`), width/height, duration_ms ≤60 s, alt_text ≤1,000. Insert own only while uploading (max 20); update alt_text only; the last slide of a published post can't be deleted |
+| `can_view_post(uuid)`, `can_view_post_object(text)` | functions, security definer | Phase 3 | author, any collaborator row, or published + not archived + `can_view_profile(author)` + close-friends membership for CF posts. **Use for comments/likes/saves visibility (Phase 4)** |
+| `post_tags` | table | Phase 3 (page 37) | (media_id, tagged_user_id) unique, x/y 0–1 (null on video). Insert/update by author; delete by author or the tagged user; ≤20 people per post |
+| `post_collaborators` | table | Phase 3 (page 36) | (post_id, user_id) status pending/accepted, ≤5. Insert by author (pending, not self); accept/decline via `respond_collab_invite`; delete by either party. Accepted posts appear on the collaborator's grid |
+| `post_mentions` | table | Phase 3 | Trigger-parsed @usernames of published captions (for Phase 8 notifications). Select: mentioned user or post viewers |
+| `hashtags`, `post_hashtags` | tables | Phase 3 **STUB (owned by Phase 7)** | Trigger-parsed from published captions; `hashtags.post_count` trigger-kept. Read-only to clients. Phase 7 adds hashtag pages / search |
+| `audio_tracks`, `saved_audio` | tables | Phase 3 (page 39) | Catalog readable by authenticated, written by service role (`scripts/seed-audio.mjs`, source = placeholder). saved_audio owner-only (Saved tab; Phase 6 Saved → Audio) |
+| `audio` | bucket (public, 20 MB, audio + cover images) | Phase 3 | No client write policies |
+| `publish_post(uuid)` | RPC, security definer | Phase 3 (page 40) | author only; ≥1 media and every path/thumb present in storage → published |
+| `reorder_post_media(uuid, uuid[])` | RPC, security definer | Phase 3 (pages 35/41) | author only; exact id set |
+| `profile_posts(user, kind, offset, limit)` | RPC (invoker) | Phase 3 | kind grid (own + accepted collabs, pinned first) / tagged / archived (own only); cover path, media_count, is_pinned |
+| `search_profiles(query, limit)` | RPC (invoker) | Phase 3 | mentions / Tag people / collaborators; accounts you follow first |
+| `my_collab_invites()`, `respond_collab_invite(uuid, bool)` | RPCs | Phase 3 | pending invites inbox (stub UI until page 71) |
+| `saved_collection_items.post_id`, `saved_collections.cover_post_id` | FKs | Phase 3 | → posts (cascade / set null) |
+| `is_valid_username` reserved list | function update | Phase 3 | + compose |

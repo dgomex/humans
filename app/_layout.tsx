@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components';
 import { AuthProvider, useAuth, type AuthGate } from '@/features/auth/AuthProvider';
+import { UploadQueueProvider } from '@/features/create/UploadQueue';
 import { queryClient } from '@/lib/queryClient';
 import { useTheme } from '@/theme';
 
@@ -40,8 +41,10 @@ export default function RootLayout() {
           <ThemeProvider value={navTheme}>
             <ToastProvider>
               <AuthProvider>
-                <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-                <RootNavigator />
+                <UploadQueueProvider>
+                  <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+                  <RootNavigator />
+                </UploadQueueProvider>
               </AuthProvider>
             </ToastProvider>
           </ThemeProvider>
@@ -75,10 +78,18 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={g === 'signedIn'}>
         <Stack.Screen name="(tabs)" />
+        {/* Phase 3 — Creation (pages 32–42) */}
         <Stack.Screen
-          name="(modals)/create-entry"
+          name="compose"
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
+        <Stack.Screen name="p/[id]/index" />
+        <Stack.Screen
+          name="p/[id]/edit"
+          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="archive" />
+        <Stack.Screen name="collab-invites" />
         <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
         {/* Phase 2 — Profile (screens without the tab bar) */}
         <Stack.Screen name="edit-profile/index" />

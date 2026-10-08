@@ -284,7 +284,7 @@ export function LinksSheet({
 
 /** "+" on the own profile: what to create. */
 export function CreateSheet({ visible, onClose }: SheetProps) {
-  const create = after(onClose, () => router.push('/create-entry'));
+  const create = after(onClose, () => router.push('/compose'));
   return (
     <BottomSheet visible={visible} onClose={onClose} title="Create">
       <ActionRow icon="reels" label="Reel" onPress={create} />
@@ -301,8 +301,8 @@ export function CreateSheet({ visible, onClose }: SheetProps) {
 }
 
 /**
- * ☰ on the own profile. STUB of "Settings and activity" (page 86, Phase 11): only the Phase 2
- * destinations + temporary Log out.
+ * ☰ on the own profile. STUB of "Settings and activity" (page 86, Phase 11): only the Phase 2–3
+ * destinations (incl. Archive and collaboration invites) + temporary Log out.
  */
 export function OwnMenuSheet({
   visible,
@@ -311,13 +311,22 @@ export function OwnMenuSheet({
 }: SheetProps & { requestCount: number }) {
   const auth = useAuth();
   const { colors, spacing } = useTheme();
-  const go = (path: '/saved' | '/close-friends' | '/favorites' | '/follow-requests' | '/qr') =>
-    after(onClose, () => router.push(path));
+  const go = (
+    path:
+      | '/saved'
+      | '/archive'
+      | '/close-friends'
+      | '/favorites'
+      | '/follow-requests'
+      | '/collab-invites'
+      | '/qr',
+  ) => after(onClose, () => router.push(path));
   const username = auth.profile?.username ?? '';
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title="Settings and activity">
       <ActionRow icon="bookmark" label="Saved" onPress={go('/saved')} />
+      <ActionRow icon="archive" label="Archive" onPress={go('/archive')} />
       <ActionRow icon="closeFriends" label="Close Friends" onPress={go('/close-friends')} />
       <ActionRow icon="starOutline" label="Favorites" onPress={go('/favorites')} />
       <ActionRow
@@ -344,6 +353,7 @@ export function OwnMenuSheet({
           ) : null
         }
       />
+      <ActionRow icon="collab" label="Collaboration invites" onPress={go('/collab-invites')} />
       <ActionRow icon="qr" label="QR code" onPress={go('/qr')} />
       <ActionRow
         icon="logout"

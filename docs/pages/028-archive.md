@@ -1,7 +1,7 @@
 # Page 028 — Archive (posts, stories, live archive)
 
 - **Phase:** 2 — Profile
-- **Status:** Deferred
+- **Status:** Deferred — posts archive built in Phase 3 (`app/archive.tsx`, ☰ → Archive, ⋯ → Show on profile); stories (5) and live (10) archives pending
 - **Route:** `app/archive.tsx`
 - **Depends on:** `posts.archived_at` (Phase 3), `stories` (Phase 5), `live_sessions` (Phase 10)
 

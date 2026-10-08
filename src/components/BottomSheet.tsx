@@ -61,6 +61,10 @@ export function BottomSheet({
           if (done) scheduleOnRN(finishClose);
         }),
       );
+      // Fallback: if the animation is interrupted or frames are paused (e.g. a backgrounded web
+      // tab), still unmount so the invisible backdrop can't keep swallowing taps.
+      const t = setTimeout(finishClose, 400);
+      return () => clearTimeout(t);
     }
   }, [visible, windowHeight, translateY, finishClose]);
 

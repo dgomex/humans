@@ -20,7 +20,12 @@ Single source of truth for progress. Update after **every** workflow step.
 - Verified: `node scripts/test-profile-rls.mjs` (42 checks: privacy, requests, lists, close friends, favorites, collections, bell), Phase 1 scripts still pass, DB lint clean, typecheck + lint clean, both native bundles compile, and clicked through on web (light + dark): own profile, private → requested → approved profile, Following sheet, lists, edit bio, links sheet, QR, Close friends, Saved collections.
 - **Still to verify on a real phone (Expo Go):** QR download + scanner (camera), photo change, share sheet, swipe between profile tabs, sheets' drag-to-dismiss.
 
-Next: Phase 3 — Content Creation (`/start-phase 3`): it provides `posts`, which fills the profile grids and saved collections.
+**Phase 3 — Content Creation:** built 2026-10-08 (pages 32–37, 39–42; 38 Location dropped by decision). Posts archive (posts part of page 28) built here too.
+- Verified: `node scripts/test-posts-rls.mjs` (59 checks: upload→publish, private/close-friends visibility incl. signed URLs, caption limits, hashtags/mentions, tags + self-untag, reorder, alt text, collaborators, archive, pin limit, audio catalog, collection FK), Phase 0–2 scripts still pass, DB lint clean, typecheck + lint clean, both native bundles compile. Clicked through on web (dark + light): Create → Library (2 photos) → crop/ratio toggle → caption with @/# autocomplete → Tag people → music + clip window → Share → "Posted" banner → profile grid → post view → Pin / Edit caption / Archive → Posts archive.
+- Music catalog: run `node scripts/seed-audio.mjs` after every `npx supabase db reset` (8 generated placeholder loops).
+- **Still to verify on a real phone (Expo Go):** OS multi-picker (ordered selection), camera photo + hold-to-record video (mic permission), pinch/drag crop, long-press drag reorder, video playback/posters, upload progress + resume after killing the app + auto-retry when back online, drafts in app storage, "Save draft?" on back/swipe, music preview playback.
+
+**Phase 4 — Home Feed & Post Interactions:** started 2026-10-08. Prerequisites present (follows, favorites, posts, `can_view_post`). Pages 43–51 researched, specs written; awaiting the user's clone/changes decisions.
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -34,7 +39,12 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
 | Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
 | Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | Build editor + `highlight_items` in Phase 5 |
-| `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | Add FK + saves |
+| `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | FK **resolved** in Phase 3; saves + bookmark still Phase 4 |
+| Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | Stub: replace with the real post detail (likes, comments, share) |
+| `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | Stub: move into Activity |
+| `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | Stub: hashtag pages + search in Phase 7 |
+| ☰ menu gains "Archive" (posts archive, page 28 posts part) | 041 | 11 — Settings (page 86) / 5, 10 (stories, live archive) | Part of the ☰ stub |
+| Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Replace with real CC0/licensed tracks |
 
 ## Phase 0 — Foundation
 
@@ -85,7 +95,7 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | 25 | Story Highlights – create / edit / cover selection | [spec](025-highlights-editor.md) | ☑ | Changes | ◐ row only; editor in Phase 5 | ◐ |
 | 26 | Saved (collections list) | [spec](026-saved.md) | ☑ | Changes | ☑ | ◐ |
 | 27 | Saved collection detail / create & edit collection | [spec](027-saved-collection.md) | ☑ | Changes | ☑ | ◐ |
-| 28 | Archive (posts, stories, live archive) | [spec](028-archive.md) | ☑ | Deferred | — | — |
+| 28 | Archive (posts, stories, live archive) | [spec](028-archive.md) | ☑ | Deferred | ◐ posts part (Phase 3); stories 5, live 10 | ◐ |
 | 29 | Your activity (interactions, time spent, recently deleted) | [spec](029-your-activity.md) | ☑ | Deferred | — | — |
 | 30 | Close Friends list management | [spec](030-close-friends.md) | ☑ | Full clone | ☑ | ◐ |
 | 31 | Favorites list management | [spec](031-favorites.md) | ☑ | Full clone | ☑ | ◐ |
@@ -94,31 +104,31 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 32 | Create entry / media picker (post, story, reel, live switcher) | — | ☐ | — | ☐ | ☐ |
-| 33 | Camera (photo/video capture) | — | ☐ | — | ☐ | ☐ |
-| 34 | Multi-select & crop (carousel) | — | ☐ | — | ☐ | ☐ |
-| 35 | Filters & edit (adjust, brightness, etc.) | — | ☐ | — | ☐ | ☐ |
-| 36 | New post details (caption, tag people, location, music, alt text, advanced settings) | — | ☐ | — | ☐ | ☐ |
-| 37 | Tag people | — | ☐ | — | ☐ | ☐ |
-| 38 | Location search / add location | — | ☐ | — | ☐ | ☐ |
-| 39 | Music picker | — | ☐ | — | ☐ | ☐ |
-| 40 | Upload progress / posting state | — | ☐ | — | ☐ | ☐ |
-| 41 | Edit existing post | — | ☐ | — | ☐ | ☐ |
-| 42 | Drafts | — | ☐ | — | ☐ | ☐ |
+| 32 | Create entry / media picker (post, story, reel, live switcher) | [spec](032-create-entry.md) | ☑ | Changes | ☑ | ◐ |
+| 33 | Camera (photo/video capture) | [spec](033-camera.md) | ☑ | Full clone | ☑ | ◐ |
+| 34 | Multi-select & crop (carousel) | [spec](034-multi-select-crop.md) | ☑ | Full clone | ☑ | ◐ |
+| 35 | Filters & edit (adjust, brightness, etc.) | [spec](035-filters-edit.md) | ☑ | Changes | ☑ | ◐ |
+| 36 | New post details (caption, tag people, location, music, alt text, advanced settings) | [spec](036-new-post-details.md) | ☑ | Changes | ☑ | ◐ |
+| 37 | Tag people | [spec](037-tag-people.md) | ☑ | Full clone | ☑ | ◐ |
+| 38 | Location search / add location | [spec](038-location-search.md) | ☑ | Dropped | — | — |
+| 39 | Music picker | [spec](039-music-picker.md) | ☑ | Changes | ☑ | ◐ |
+| 40 | Upload progress / posting state | [spec](040-upload-progress.md) | ☑ | Full clone | ☑ | ◐ |
+| 41 | Edit existing post | [spec](041-edit-post.md) | ☑ | Changes | ☑ | ◐ |
+| 42 | Drafts | [spec](042-drafts.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 4 — Home Feed & Post Interactions
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 43 | Home Feed (header, stories tray, post feed, suggested posts) | — | ☐ | — | ☐ | ☐ |
-| 44 | Post detail (single post view) | — | ☐ | — | ☐ | ☐ |
-| 45 | Carousel viewer / media zoom | — | ☐ | — | ☐ | ☐ |
-| 46 | Comments (threaded replies, likes, pin, emoji bar) | — | ☐ | — | ☐ | ☐ |
-| 47 | Likes list | — | ☐ | — | ☐ | ☐ |
-| 48 | Share sheet (send to DMs, add to story, copy link) | — | ☐ | — | ☐ | ☐ |
-| 49 | Post options menu (save, report, hide, unfollow, not interested, about this account) | — | ☐ | — | ☐ | ☐ |
-| 50 | Report flow | — | ☐ | — | ☐ | ☐ |
-| 51 | Feed variants: Following / Favorites feeds | — | ☐ | — | ☐ | ☐ |
+| 43 | Home Feed (header, stories tray, post feed, suggested posts) | [spec](043-home-feed.md) | ☑ | — | ☐ | ☐ |
+| 44 | Post detail (single post view) | [spec](044-post-detail.md) | ☑ | — | ☐ | ☐ |
+| 45 | Carousel viewer / media zoom | [spec](045-carousel-zoom.md) | ☑ | — | ☐ | ☐ |
+| 46 | Comments (threaded replies, likes, pin, emoji bar) | [spec](046-comments.md) | ☑ | — | ☐ | ☐ |
+| 47 | Likes list | [spec](047-likes-list.md) | ☑ | — | ☐ | ☐ |
+| 48 | Share sheet (send to DMs, add to story, copy link) | [spec](048-share-sheet.md) | ☑ | — | ☐ | ☐ |
+| 49 | Post options menu (save, report, hide, unfollow, not interested, about this account) | [spec](049-post-options.md) | ☑ | — | ☐ | ☐ |
+| 50 | Report flow | [spec](050-report-flow.md) | ☑ | — | ☐ | ☐ |
+| 51 | Feed variants: Following / Favorites feeds | [spec](051-following-favorites-feeds.md) | ☑ | — | ☐ | ☐ |
 
 ## Phase 5 — Stories
 
@@ -222,6 +232,6 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Push notifications (Expo Notifications + Edge Functions) | ☐ | |
 | Deep links (profile, post, reel, story) | ☐ | |
 | Realtime (DMs, typing, notifications, live comments) | ☐ | |
-| Media pipeline (compression, thumbnails, video) | ☐ | |
+| Media pipeline (compression, thumbnails, video) | ◐ | Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding |
 | Feed ranking / Explore recommendations | ☐ | |
 | Moderation & reporting backend | ☐ | |
