@@ -13,7 +13,7 @@ import type { Database } from '@/types/database';
 type Fn = Database['public']['Functions'];
 
 export type GridPost = Fn['profile_posts']['Returns'][number] & { coverUrl: string | null };
-export type GridKind = 'grid' | 'tagged' | 'archived';
+export type GridKind = 'grid' | 'tagged' | 'archived' | 'reposts';
 export type SearchedProfile = Fn['search_profiles']['Returns'][number];
 export type CollabInvite = Fn['my_collab_invites']['Returns'][number] & { coverUrl: string | null };
 export type AudioTrack = Database['public']['Tables']['audio_tracks']['Row'];
@@ -35,6 +35,8 @@ export const postKeys = {
 export function invalidatePosts(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: postKeys.all });
   void qc.invalidateQueries({ queryKey: ['profile'] });
+  // Phase 4 feed cards / feeds show the same posts.
+  void qc.invalidateQueries({ queryKey: ['feed'] });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -141,7 +143,10 @@ export function useUpdatePostFlags(id: string) {
 export function useDeletePost() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (post: PostDetail) => {
+    mutationFn: async (post: {
+      id: string;
+      media: { path: string; thumb_path: string | null }[];
+    }) => {
       const { error } = await supabase.from('posts').delete().eq('id', post.id);
       if (error) throw error;
       const files = post.media.flatMap((m) => (m.thumb_path ? [m.path, m.thumb_path] : [m.path]));

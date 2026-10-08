@@ -31,9 +31,20 @@ export default function SavedScreen() {
       />
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-          <CollectionTile name="All posts" width={tile} onPress={() => open(ALL_POSTS)} />
+          <CollectionTile
+            id={ALL_POSTS}
+            name="All posts"
+            width={tile}
+            onPress={() => open(ALL_POSTS)}
+          />
           {(collections.data ?? []).map((c) => (
-            <CollectionTile key={c.id} name={c.name} width={tile} onPress={() => open(c.id)} />
+            <CollectionTile
+              key={c.id}
+              id={c.id}
+              name={c.name}
+              width={tile}
+              onPress={() => open(c.id)}
+            />
           ))}
         </View>
         {collections.isPending ? <ActivityIndicator style={{ marginTop: spacing.xl }} /> : null}

@@ -74,6 +74,62 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"comment_likes": {
+                  Row: {
+                    "comment_id": string,"created_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "comment_id": string,"created_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "comment_id"?: string,"created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "comment_likes_comment_id_fkey"
+      columns: ["comment_id"]
+isOneToOne: false
+      referencedRelation: "comments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "comment_likes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"comments": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"hidden_at": string | null,"id": string,"like_count": number,"parent_id": string | null,"pinned_at": string | null,"post_id": string,"reply_count": number
+                  }
+                  Insert: {
+                    "author_id"?: string,"body": string,"created_at"?: string,"hidden_at"?: string | null,"id"?: string,"like_count"?: number,"parent_id"?: string | null,"pinned_at"?: string | null,"post_id": string,"reply_count"?: number
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"hidden_at"?: string | null,"id"?: string,"like_count"?: number,"parent_id"?: string | null,"pinned_at"?: string | null,"post_id"?: string,"reply_count"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "comments_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "comments_parent_id_fkey"
+      columns: ["parent_id"]
+isOneToOne: false
+      referencedRelation: "comments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "comments_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"contact_hashes": {
                   Row: {
                     "created_at": string,"hash": string,"owner_id": string
@@ -194,6 +250,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"likes": {
+                  Row: {
+                    "created_at": string,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "likes_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "likes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"post_collaborators": {
                   Row: {
                     "invited_at": string,"post_id": string,"responded_at": string | null,"status": string,"user_id": string
@@ -241,6 +322,31 @@ isOneToOne: false
       columns: ["post_id"]
 isOneToOne: false
       referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_hides": {
+                  Row: {
+                    "created_at": string,"post_id": string,"reason": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"reason"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"reason"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_hides_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_hides_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -294,6 +400,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"post_seen": {
+                  Row: {
+                    "post_id": string,"seen_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "post_id": string,"seen_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "post_id"?: string,"seen_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_seen_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_seen_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"post_tags": {
                   Row: {
                     "created_at": string,"id": string,"media_id": string,"post_id": string,"tagged_user_id": string,"x": number | null,"y": number | null
@@ -327,13 +458,13 @@ isOneToOne: false
                   ]
                 },"posts": {
                   Row: {
-                    "archived_at": string | null,"aspect_ratio": number,"audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"caption": string,"comments_disabled": boolean,"created_at": string,"edited_at": string | null,"hide_like_counts": boolean,"id": string,"pinned_at": string | null,"published_at": string | null,"status": string,"updated_at": string
+                    "archived_at": string | null,"aspect_ratio": number,"audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"caption": string,"comment_count": number,"comments_disabled": boolean,"created_at": string,"edited_at": string | null,"hide_like_counts": boolean,"id": string,"like_count": number,"pinned_at": string | null,"published_at": string | null,"repost_count": number,"status": string,"updated_at": string
                   }
                   Insert: {
-                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"pinned_at"?: string | null,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"like_count"?: number,"pinned_at"?: string | null,"published_at"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"pinned_at"?: string | null,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"like_count"?: number,"pinned_at"?: string | null,"published_at"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -387,6 +518,50 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"reports": {
+                  Row: {
+                    "created_at": string,"id": string,"reason": string,"reporter_id": string,"status": string,"sub_reason": string | null,"target_id": string,"target_type": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"reason": string,"reporter_id"?: string,"status"?: string,"sub_reason"?: string | null,"target_id": string,"target_type": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"reason"?: string,"reporter_id"?: string,"status"?: string,"sub_reason"?: string | null,"target_id"?: string,"target_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reports_reporter_id_fkey"
+      columns: ["reporter_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"reposts": {
+                  Row: {
+                    "created_at": string,"note": string | null,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"note"?: string | null,"post_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"note"?: string | null,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reposts_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reposts_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"saved_audio": {
                   Row: {
@@ -463,6 +638,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"saves": {
+                  Row: {
+                    "created_at": string,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saves_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "saves_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"username_changes": {
                   Row: {
                     "changed_at": string,"id": string,"new_username": string,"old_username": string,"user_id": string
@@ -510,6 +710,11 @@ isOneToOne: false
 "can_view_profile":
 { Args: { "target": string }; Returns: boolean
                            },
+"comment_likers":
+{ Args: { "p_comment": string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string }; Returns: {
+              "avatar_path": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"requested": boolean,"username": string
+            }[]
+                           },
 "complete_signup":
 { Args: { "p_birthday": string,"p_full_name": string,"p_username": string }; Returns: {
               "avatar_path": string | null,
@@ -534,19 +739,35 @@ isOneToOne: false
 "follow_user":
 { Args: { "target": string }; Returns: string
                            },
+"following_feed":
+{ Args: { "p_before"?: string,"p_before_id"?: string,"p_kind"?: string,"p_limit"?: number }; Returns: {
+              "post_id": string,"published_at": string
+            }[]
+                           },
 "get_profile":
 { Args: { "p_user_id"?: string,"p_username"?: string }; Returns: {
               "avatar_path": string,"bio": string,"can_view": boolean,"created_at": string,"followers_count": number,"following_count": number,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"is_private": boolean,"is_self": boolean,"links": Json,"mutual_count": number,"mutual_preview": Json,"posts_count": number,"requested": boolean,"username": string
             }[]
                            },
+"home_feed":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
+              "post_id": string,"reason": string,"repost_note": string,"reposted_by_id": string,"reposted_by_username": string,"score": number
+            }[]
+                           },
 "is_valid_caption":
 { Args: { "caption": string }; Returns: boolean
+                           },
+"is_valid_comment":
+{ Args: { "body": string }; Returns: boolean
                            },
 "is_valid_profile_links":
 { Args: { "links": Json }; Returns: boolean
                            },
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
+                           },
+"mark_posts_seen":
+{ Args: { "p_ids": (string)[] }; Returns: undefined
                            },
 "my_collab_invites":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -556,6 +777,19 @@ isOneToOne: false
 "people_picker":
 { Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"username": string
+            }[]
+                           },
+"post_cards":
+{ Args: { "p_ids": (string)[] }; Returns: Json[]
+                           },
+"post_comments":
+{ Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_parent"?: string,"p_post": string }; Returns: {
+              "author_id": string,"avatar_path": string,"body": string,"created_at": string,"id": string,"is_hidden": boolean,"is_pinned": boolean,"is_post_author": boolean,"like_count": number,"liked": boolean,"liked_by_post_author": boolean,"parent_id": string,"post_id": string,"reply_count": number,"username": string
+            }[]
+                           },
+"post_likers":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string,"p_search"?: string }; Returns: {
+              "avatar_path": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"requested": boolean,"username": string
             }[]
                            },
 "profile_connections":
@@ -580,10 +814,21 @@ isOneToOne: false
 "respond_collab_invite":
 { Args: { "p_accept": boolean,"p_post": string }; Returns: boolean
                            },
+"saved_posts":
+{ Args: { "p_collection"?: string,"p_limit"?: number,"p_offset"?: number }; Returns: {
+              "author_id": string,"cover_path": string,"cover_type": string,"id": string,"media_count": number,"saved_at": string
+            }[]
+                           },
 "search_profiles":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"username": string
             }[]
+                           },
+"set_comment_hidden":
+{ Args: { "p_comment": string,"p_hidden": boolean }; Returns: undefined
+                           },
+"set_comment_pinned":
+{ Args: { "p_comment": string,"p_pinned": boolean }; Returns: undefined
                            },
 "suggest_usernames":
 { Args: { "full_name": string,"max_count"?: number }; Returns: (string)[]
@@ -591,6 +836,11 @@ isOneToOne: false
 "suggested_accounts":
 { Args: { "max_count"?: number }; Returns: {
               "avatar_path": string,"full_name": string,"id": string,"is_private": boolean,"reason": string,"username": string
+            }[]
+                           },
+"suggested_posts":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
+              "post_id": string,"score": number
             }[]
                            },
 "sync_post_caption_refs":

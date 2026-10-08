@@ -13,6 +13,7 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   legal/[doc].tsx         # placeholder Terms / Privacy / Cookies pages
   (tabs)/                 # bottom tabs; each tab is its own Stack so pushed screens keep the tab bar:
     (home)/index, (explore)/explore, (reels)/reels, (profile)/profile, create (stub, opens modal)
+    (home)/feed/[kind]    # page 51: Following / Favorites feeds
     (home,explore,reels,profile)/  # shared routes (array group) + the per-tab Stack layout:
       [username]/{index,connections,about}  # profiles (16–18), followers/following/mutual (21–22), About (23)
       # cold deep links land in the first group alphabetically (Explore); in-app pushes stay in the current tab
@@ -25,12 +26,15 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   compose/                # Phase 3 creation flow (full-screen modal, own Stack + ComposerProvider):
     index (32 entry: Library · Camera · Drafts), camera (33), edit (34/35 crop + strip),
     details (36), tag-people (37), collaborators, music (39), advanced, alt-text, drafts (42)
-  p/[id]/{index,edit}     # STUB of page 44 (own-post ⋯ menu) + Edit info (41)
+  p/[id]/index            # page 44: post detail (single post, or a scroller of a grid via ?source=&owner=)
+  p/[id]/comments         # page 46 (transparent modal + ScreenSheet panel)
+  p/[id]/likes            # page 47 (?comment= for comment likers)
+  p/[id]/edit             # page 41 Edit info
+  report                  # page 50 report flow (?type=post|comment|profile&id=)
   archive                 # posts archive (page 28, posts part)
   collab-invites          # STUB until Activity (page 71): collaboration invites
-  (modals)/               # future modal routes: comments, share, options…
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
-  p/[id].tsx, reel/[id].tsx, stories/[userId].tsx, direct/…   # future
+  reel/[id].tsx, stories/[userId].tsx, direct/…   # future
 src/
   components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text, TextField, UserRow, ActionRow/ActionGroup (sheet menus), SearchField (barrel: @/components)
   features/<area>/        # per-area logic: api.ts (Supabase queries), hooks.ts, components/
@@ -45,7 +49,11 @@ src/
                           # UploadQueue (persisted per-account queue, page 40), drafts.ts + localFiles.ts (device-only), useOpenLibrary,
                           # useSaveDraftGuard, components/ (CropView, CroppedImage, SortableStrip, UploadBanner)
   features/posts/         # api.ts (profile_posts grids, usePost, flags, edits, collab invites, search_profiles, hashtags, music catalog),
-                          # components/ (CaptionInput @/# autocomplete, CaptionText, TagEditor, PersonSearchSheet, MediaCarousel, LoopingVideo)
+                          # components/ (CaptionInput @/# autocomplete, CaptionText, TagEditor, PersonSearchSheet, LoopingVideo)
+  features/feed/          # Phase 4: api.ts (post_cards cache per post, home / chrono / scroller feeds, likes, saves, reposts,
+                          # hides, impressions, comments, likers, reports), format.ts (timeAgo, shortAge, postUrl, shared mute),
+                          # components/ (PostCard, PostMedia, ZoomOverlay + ZoomProvider, FeedList, PostSheets + PostSheetsProvider
+                          # = share / ⋯ options / collections / why / repost note, CommentComposer)
   lib/navigation.ts       # goBack(fallback): back, or replace when there's no history (deep links / reloads)
   lib/useDebounced.ts     # debounced value (search fields)
   lib/dialog.ts           # showDialog(): native Alert, browser confirm/alert on web — use instead of Alert
@@ -61,7 +69,9 @@ scripts/
   test-auth-flow.mjs      # Phase 1 end-to-end auth + RLS check (reads codes from Mailpit)
   test-profile-rls.mjs    # Phase 2 privacy / follows / lists / collections RLS check (three fresh users)
   test-posts-rls.mjs      # Phase 3 posts / media / tags / collaborators / archive / pin RLS check (three fresh users)
+  test-feed-rls.mjs       # Phase 4 likes / comments / saves / reposts / feeds / hides / reports RLS check (four fresh users)
   seed-audio.mjs          # synthesize + upload the placeholder music catalog (re-run after db reset)
+  seed-feed.mjs           # demo graph for the feed: dev.viewer + 4 accounts, generated photos, likes, comments, a repost
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
 supabase/
   config.toml
@@ -170,3 +180,21 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `my_collab_invites()`, `respond_collab_invite(uuid, bool)` | RPCs | Phase 3 | pending invites inbox (stub UI until page 71) |
 | `saved_collection_items.post_id`, `saved_collections.cover_post_id` | FKs | Phase 3 | → posts (cascade / set null) |
 | `is_valid_username` reserved list | function update | Phase 3 | + compose |
+| `posts.like_count`, `comment_count`, `repost_count` | columns | Phase 4 | Trigger-kept; no client grant. `post_cards` masks `like_count` (null) for non-authors when `hide_like_counts` |
+| `likes` | table | Phase 4 (pages 43/47) | (post_id, user_id) PK. RLS: select `can_view_post` (likers visible even with hidden counts); insert own on visible posts; delete own |
+| `comments` | table | Phase 4 (page 46) | post_id, author_id, parent_id (one level; trigger re-points replies-to-replies), body (`is_valid_comment`: 1–2,200, ≤30 #, ≤5 @), like_count, reply_count, pinned_at (≤3, top-level), hidden_at. RLS: select `can_view_post` + (not hidden, writer, or post author); insert own (published, commenting on; column grant id, post_id, parent_id, body); delete by writer or post author; no updates (pin/hide via RPCs) |
+| `comment_likes` | table | Phase 4 | (comment_id, user_id). Visible / insertable when the comment is visible; delete own |
+| `saves` | table | Phase 4 (pages 43/49, 26/27) | (user_id, post_id). Owner-only; insert needs `can_view_post`. Trigger: unsave removes the post from the user's collections; inserting a `saved_collection_items` row saves the post |
+| `reposts` | table | Phase 4 (page 48) | (user_id, post_id), note ≤60 (updatable). Insert only published, non-archived, Everyone posts of public accounts, not your own. Select `can_view_profile(user)` + `can_view_post`. Trigger-kept `posts.repost_count` |
+| `post_hides` | table | Phase 4 (page 49/50) | (user_id, post_id, reason hidden / not_interested / reported). Owner-only. Excluded from every feed |
+| `post_seen` | table | Phase 4 (page 43) | (user_id, post_id, seen_at) impressions for ranking. Owner-only; written by `mark_posts_seen` |
+| `reports` | table | Phase 4 (page 50) | reporter, target_type post/comment/profile, target_id, reason (9 values), sub_reason, status. One per reporter+target. Trigger: target visible, not self; reported posts → `post_hides`. RLS: insert own (column grant), select own. **Moderation UI: none yet** (Phase 11 page 108 support requests) |
+| `post_cards(uuid[])` | RPC (invoker) | Phase 4 | jsonb per post in input order: author, media, tags, collaborators, audio, masked counts, liked / saved / reposted / can_repost, follow / favorite flags, liked_by (someone you follow), 2 preview comments |
+| `home_feed(snapshot, offset, limit)`, `suggested_posts(snapshot, offset, limit)` | RPCs (invoker) | Phase 4 (page 43) | Ranked; snapshot keeps paging stable. Home = followed / own / followed collaborators / reposts by people you follow, last 3 days. Suggested = public posts from accounts you don't follow (≤30 days) |
+| `following_feed(kind, before, before_id, limit)` | RPC (invoker) | Phase 4 (page 51) | Chronological Following / Favorites, keyset paging |
+| `mark_posts_seen(uuid[])` | RPC (invoker) | Phase 4 | Ignores posts the caller can't view |
+| `post_comments(post, kind, parent, offset, limit)`, `set_comment_pinned`, `set_comment_hidden` | RPCs | Phase 4 (page 46) | kinds top / replies / hidden (post author only). Pin/hide: post author only (definer) |
+| `post_likers(...)`, `comment_likers(...)` | RPCs (invoker) | Phase 4 (page 47) | you, then people you follow, then newest; search |
+| `saved_posts(collection, offset, limit)` | RPC (invoker) | Phase 4 (pages 26/27) | All posts (null) or one collection; cover path for grids |
+| `profile_posts` kind `reposts` | function update | Phase 4 | Profile Reposts tab |
+| `is_valid_username` reserved list | function update | Phase 4 | + feed, report |

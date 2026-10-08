@@ -72,7 +72,8 @@ export const PROFILE_TABS = TABS.map((t) => t.key);
 
 /**
  * Tab pages, swipeable horizontally. The parent owns `pagerRef` so tab-bar taps can scroll it.
- * Grid and Tagged show posts (Phase 3); Reels and Reposts keep their empty states until Phase 6.
+ * Grid and Tagged show posts (Phase 3), Reposts the posts this account reposted (Phase 4); Reels
+ * keeps its empty state until Phase 6. Tiles open the post scroller (page 44) at that post.
  * `loadMoreRef` is set to the active tab's "fetch next page" for the parent's scroll handler.
  */
 export function ProfileTabPages({
@@ -81,6 +82,7 @@ export function ProfileTabPages({
   onSwipe,
   isOwn,
   userId,
+  username,
   loadMoreRef,
 }: {
   pagerRef: RefObject<ScrollView | null>;
@@ -88,11 +90,13 @@ export function ProfileTabPages({
   onSwipe: (tab: ProfileTabKey) => void;
   isOwn: boolean;
   userId: string;
+  username: string;
   loadMoreRef?: RefObject<(() => void) | null>;
 }) {
   const { width } = useWindowDimensions();
   const posts = useProfilePosts(userId, 'grid');
   const tagged = useProfilePosts(userId, 'tagged', active === 'tagged');
+  const reposts = useProfilePosts(userId, 'reposts', active === 'reposts');
   const { jobs } = useUploadQueue();
 
   const pending: GridItem[] = isOwn
@@ -103,8 +107,16 @@ export function ProfileTabPages({
   const byTab: Partial<Record<ProfileTabKey, GridItem[]>> = {
     grid: [...pending, ...(posts.data?.pages.flat() ?? []).map(toGridItem)],
     tagged: (tagged.data?.pages.flat() ?? []).map(toGridItem),
+    reposts: (reposts.data?.pages.flat() ?? []).map(toGridItem),
   };
-  const query = active === 'grid' ? posts : active === 'tagged' ? tagged : null;
+  const query =
+    active === 'grid'
+      ? posts
+      : active === 'tagged'
+        ? tagged
+        : active === 'reposts'
+          ? reposts
+          : null;
   useEffect(() => {
     if (!loadMoreRef) return;
     loadMoreRef.current = () => {
@@ -127,7 +139,9 @@ export function ProfileTabPages({
     >
       {TABS.map((t) => {
         const loading =
-          (t.key === 'grid' && posts.isPending) || (t.key === 'tagged' && tagged.isPending);
+          (t.key === 'grid' && posts.isPending) ||
+          (t.key === 'tagged' && tagged.isPending) ||
+          (t.key === 'reposts' && reposts.isPending && active === 'reposts');
         return (
           <View key={t.key} style={{ width }}>
             {loading ? (
@@ -136,6 +150,9 @@ export function ProfileTabPages({
               <ProfileGrid
                 items={byTab[t.key] ?? []}
                 empty={<EmptyTab tab={t.key} isOwn={isOwn} />}
+                scroller={
+                  t.key === 'reels' ? undefined : { source: t.key, owner: userId, title: username }
+                }
               />
             )}
           </View>
@@ -172,11 +189,14 @@ export function ProfileGrid({
   items,
   empty,
   onPressItem,
+  scroller,
 }: {
   items: GridItem[];
   empty: ReactNode;
   /** Default: open the post. */
   onPressItem?: (item: GridItem) => void;
+  /** Open the post inside a scroller of this grid (page 44) instead of on its own. */
+  scroller?: { source: 'grid' | 'tagged' | 'reposts' | 'saved'; owner: string; title?: string };
 }) {
   const { width } = useWindowDimensions();
   const { colors } = useTheme();
@@ -191,7 +211,10 @@ export function ProfileGrid({
           onPress={() =>
             onPressItem
               ? onPressItem(item)
-              : router.push({ pathname: '/p/[id]', params: { id: item.id } })
+              : router.push({
+                  pathname: '/p/[id]',
+                  params: scroller ? { id: item.id, ...scroller } : { id: item.id },
+                })
           }
           accessibilityRole={item.pending ? undefined : 'button'}
           accessibilityLabel={item.pending ? 'Posting' : 'Open post'}

@@ -109,6 +109,7 @@ export function ProfileView({
           onSwipe={setTab}
           isOwn={isOwn}
           userId={profile.id}
+          username={profile.username}
           loadMoreRef={loadMore}
         />
       )}

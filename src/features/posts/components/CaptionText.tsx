@@ -6,13 +6,22 @@ const TOKEN = /(@[a-z0-9._]{1,30}|#[\p{L}\p{N}_]+)/iu;
 
 /** "username caption" with tappable @mentions and #hashtags (hashtag pages: Phase 7). */
 export function CaptionText({ username, caption }: { username: string; caption: string }) {
-  const toast = useToast();
   return (
     <Text>
       <Text variant="bodyBold" onPress={() => openProfile(username)}>
         {username}
       </Text>{' '}
-      {caption.split(TOKEN).map((part, i) => {
+      <LinkedText text={caption} />
+    </Text>
+  );
+}
+
+/** Text with tappable @mentions and #hashtags (comments, captions). Nest inside a <Text>. */
+export function LinkedText({ text }: { text: string }) {
+  const toast = useToast();
+  return (
+    <>
+      {text.split(TOKEN).map((part, i) => {
         if (i % 2 === 0) return part;
         const onPress = part.startsWith('@')
           ? () => openProfile(part.slice(1).toLowerCase())
@@ -23,6 +32,6 @@ export function CaptionText({ username, caption }: { username: string; caption: 
           </Text>
         );
       })}
-    </Text>
+    </>
   );
 }

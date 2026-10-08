@@ -14,7 +14,7 @@ export const MAX_HASHTAGS = 30;
 export const MAX_MENTIONS = 20;
 
 // The @/# word that ends at the cursor.
-const ACTIVE_TOKEN = /(^|\s)([@#])([\p{L}\p{N}._]*)$/u;
+export const ACTIVE_TOKEN = /(^|\s)([@#])([\p{L}\p{N}._]*)$/u;
 
 export function captionProblems(caption: string): string | null {
   if (caption.length > MAX_CAPTION) return `Captions can be up to ${MAX_CAPTION} characters.`;
@@ -30,7 +30,7 @@ export function captionProblems(caption: string): string | null {
 type Selection = { start: number; end: number };
 
 /** Cursor position after `before` became `after` (end of the inserted text / deletion point). */
-function cursorAfterEdit(before: string, after: string) {
+export function cursorAfterEdit(before: string, after: string) {
   let i = 0;
   while (i < before.length && i < after.length && before[i] === after[i]) i++;
   return after.length >= before.length ? i + (after.length - before.length) : i;
@@ -169,7 +169,7 @@ export function CaptionInput({
   );
 }
 
-function HashtagRow({
+export function HashtagRow({
   name,
   detail,
   onPress,

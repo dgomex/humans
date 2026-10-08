@@ -25,7 +25,13 @@ Single source of truth for progress. Update after **every** workflow step.
 - Music catalog: run `node scripts/seed-audio.mjs` after every `npx supabase db reset` (8 generated placeholder loops).
 - **Still to verify on a real phone (Expo Go):** OS multi-picker (ordered selection), camera photo + hold-to-record video (mic permission), pinch/drag crop, long-press drag reorder, video playback/posters, upload progress + resume after killing the app + auto-retry when back online, drafts in app storage, "Save draft?" on back/swipe, music preview playback.
 
-**Phase 4 — Home Feed & Post Interactions:** started 2026-10-08. Prerequisites present (follows, favorites, posts, `can_view_post`). Pages 43–51 researched, specs written; awaiting the user's clone/changes decisions.
+**Phase 4 — Home Feed & Post Interactions:** built 2026-10-08 (pages 43–51; Changes on 46 = no GIFs / translation, 48 = DM + story sharing wait for Phases 9 / 5).
+- Verified: `node scripts/test-feed-rls.mjs` (105 checks: likes incl. hidden counts, comments / replies / pin ≤3 / hide / delete, comment likes, saves ↔ collections, reposts rules + note + Reposts tab, Home / suggested / Following / Favorites feeds, hides, impressions, reports), Phase 0–3 scripts still pass, DB lint clean, typecheck + lint clean, both native bundles compile. Clicked through on web (dark + light, phone viewport) as `dev.viewer`: ranked Home with favorite boost, repost line, close-friends badge, hidden like count, "You're all caught up" → suggested posts with Follow, comment + emoji + reply thread, ⋯ options, report → thanks + post gone from Home, share sheet → Repost (count + Reposts tab), Favorites feed, profile grid → post scroller.
+- Demo data: `node scripts/seed-feed.mjs` after every `npx supabase db reset` (and `node scripts/seed-audio.mjs`). Log in as `dev.viewer` (password in `.test-users.local.json`).
+- **Still to verify on a real phone (Expo Go):** pinch-to-zoom overlay, double-tap heart + haptics, comments form sheet (detents, keyboard), video autoplay / shared mute in the feed, long-press bookmark, share "Share to…" OS sheet, scroller keeping position when earlier posts are revealed.
+- **Not built yet from page 29 (Your activity):** the "Interactions" section (your likes / comments) was scheduled for Phase 4 by the page 29 decision; it needs the Settings / Your activity hub (Phase 11) or a small screen now — ask before building.
+
+Next: Phase 5 — Stories (`/start-phase 5`): needs Phase 1 + the Phase 3 media pipeline (done) and the Home stories tray placement (done, own circle only).
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -39,8 +45,13 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
 | Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
 | Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | Build editor + `highlight_items` in Phase 5 |
-| `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | FK **resolved** in Phase 3; saves + bookmark still Phase 4 |
-| Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | Stub: replace with the real post detail (likes, comments, share) |
+| `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | **Resolved**: FK in Phase 3; `saves`, bookmark and real Saved grids in Phase 4 |
+| Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | **Resolved** by page 44 (own-post menu and "Remove me from post" now live in the shared ⋯ options sheet) |
+| Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | Stub: wire to Activity and Inbox |
+| Stories tray shows only your own "Your story" circle (toast) | 043 | 5 — Stories (52/53) | Stub: real tray + story camera |
+| Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | Stub: DM grid + post sticker |
+| "Mute <user>" (hidden-post panel, report follow-ups), Restrict, Block | 049/050 | 11 — Settings (92–94) | Stub: "coming soon" until `mutes` / `blocks` / `restricts` exist; feeds must then exclude them |
+| Report status / support requests (reports are stored only) | 050 | 11 — Settings (108) | Stub: no moderation UI |
 | `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | Stub: move into Activity |
 | `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | Stub: hashtag pages + search in Phase 7 |
 | ☰ menu gains "Archive" (posts archive, page 28 posts part) | 041 | 11 — Settings (page 86) / 5, 10 (stories, live archive) | Part of the ☰ stub |
@@ -120,15 +131,15 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 43 | Home Feed (header, stories tray, post feed, suggested posts) | [spec](043-home-feed.md) | ☑ | — | ☐ | ☐ |
-| 44 | Post detail (single post view) | [spec](044-post-detail.md) | ☑ | — | ☐ | ☐ |
-| 45 | Carousel viewer / media zoom | [spec](045-carousel-zoom.md) | ☑ | — | ☐ | ☐ |
-| 46 | Comments (threaded replies, likes, pin, emoji bar) | [spec](046-comments.md) | ☑ | — | ☐ | ☐ |
-| 47 | Likes list | [spec](047-likes-list.md) | ☑ | — | ☐ | ☐ |
-| 48 | Share sheet (send to DMs, add to story, copy link) | [spec](048-share-sheet.md) | ☑ | — | ☐ | ☐ |
-| 49 | Post options menu (save, report, hide, unfollow, not interested, about this account) | [spec](049-post-options.md) | ☑ | — | ☐ | ☐ |
-| 50 | Report flow | [spec](050-report-flow.md) | ☑ | — | ☐ | ☐ |
-| 51 | Feed variants: Following / Favorites feeds | [spec](051-following-favorites-feeds.md) | ☑ | — | ☐ | ☐ |
+| 43 | Home Feed (header, stories tray, post feed, suggested posts) | [spec](043-home-feed.md) | ☑ | Full clone | ☑ | ◐ |
+| 44 | Post detail (single post view) | [spec](044-post-detail.md) | ☑ | Full clone | ☑ | ◐ |
+| 45 | Carousel viewer / media zoom | [spec](045-carousel-zoom.md) | ☑ | Full clone | ☑ | ◐ |
+| 46 | Comments (threaded replies, likes, pin, emoji bar) | [spec](046-comments.md) | ☑ | Changes | ☑ | ◐ |
+| 47 | Likes list | [spec](047-likes-list.md) | ☑ | Full clone | ☑ | ◐ |
+| 48 | Share sheet (send to DMs, add to story, copy link) | [spec](048-share-sheet.md) | ☑ | Changes | ☑ | ◐ |
+| 49 | Post options menu (save, report, hide, unfollow, not interested, about this account) | [spec](049-post-options.md) | ☑ | Full clone | ☑ | ◐ |
+| 50 | Report flow | [spec](050-report-flow.md) | ☑ | Full clone | ☑ | ◐ |
+| 51 | Feed variants: Following / Favorites feeds | [spec](051-following-favorites-feeds.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 5 — Stories
 
@@ -233,5 +244,5 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Deep links (profile, post, reel, story) | ☐ | |
 | Realtime (DMs, typing, notifications, live comments) | ☐ | |
 | Media pipeline (compression, thumbnails, video) | ◐ | Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding |
-| Feed ranking / Explore recommendations | ☐ | |
-| Moderation & reporting backend | ☐ | |
+| Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides; Explore in Phase 7 |
+| Moderation & reporting backend | ◐ | Phase 4: `reports` table + report flow (stored only, reporter's feeds hide the post); no review tooling |

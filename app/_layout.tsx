@@ -9,6 +9,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ToastProvider } from '@/components';
 import { AuthProvider, useAuth, type AuthGate } from '@/features/auth/AuthProvider';
 import { UploadQueueProvider } from '@/features/create/UploadQueue';
+import { PostSheetsProvider } from '@/features/feed/components/PostSheets';
+import { ZoomProvider } from '@/features/feed/components/ZoomOverlay';
 import { queryClient } from '@/lib/queryClient';
 import { useTheme } from '@/theme';
 
@@ -42,8 +44,12 @@ export default function RootLayout() {
             <ToastProvider>
               <AuthProvider>
                 <UploadQueueProvider>
-                  <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-                  <RootNavigator />
+                  <PostSheetsProvider>
+                    <ZoomProvider>
+                      <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+                      <RootNavigator />
+                    </ZoomProvider>
+                  </PostSheetsProvider>
                 </UploadQueueProvider>
               </AuthProvider>
             </ToastProvider>
@@ -84,6 +90,18 @@ function RootNavigator() {
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen name="p/[id]/index" />
+        {/* Phase 4 — Feed & interactions (pages 44–50) */}
+        <Stack.Screen
+          name="p/[id]/comments"
+          // Transparent full-window route; the screen draws its own bottom sheet (ScreenSheet)
+          // so keyboard and layout use real window coordinates (native form sheets don't).
+          options={{ presentation: 'transparentModal', animation: 'none' }}
+        />
+        <Stack.Screen name="p/[id]/likes" />
+        <Stack.Screen
+          name="report"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
         <Stack.Screen
           name="p/[id]/edit"
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
