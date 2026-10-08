@@ -36,6 +36,31 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"close_friends": {
+                  Row: {
+                    "created_at": string,"friend_id": string,"owner_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"friend_id": string,"owner_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"friend_id"?: string,"owner_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "close_friends_friend_id_fkey"
+      columns: ["friend_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "close_friends_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"contact_hashes": {
                   Row: {
                     "created_at": string,"hash": string,"owner_id": string
@@ -48,6 +73,56 @@ export type Database = {
                   }
                   Relationships: [
                     
+                  ]
+                },"favorites": {
+                  Row: {
+                    "created_at": string,"favorite_id": string,"owner_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"favorite_id": string,"owner_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"favorite_id"?: string,"owner_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "favorites_favorite_id_fkey"
+      columns: ["favorite_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "favorites_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"follow_requests": {
+                  Row: {
+                    "created_at": string,"requester_id": string,"target_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"requester_id": string,"target_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"requester_id"?: string,"target_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "follow_requests_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_requests_target_id_fkey"
+      columns: ["target_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"follows": {
                   Row: {
@@ -74,18 +149,119 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"profiles": {
+                },"highlights": {
                   Row: {
-                    "avatar_path": string | null,"created_at": string,"full_name": string,"id": string,"updated_at": string,"username": string
+                    "cover_path": string | null,"created_at": string,"id": string,"owner_id": string,"position": number,"title": string,"updated_at": string
                   }
                   Insert: {
-                    "avatar_path"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"updated_at"?: string,"username": string
+                    "cover_path"?: string | null,"created_at"?: string,"id"?: string,"owner_id"?: string,"position"?: number,"title"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "avatar_path"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"updated_at"?: string,"username"?: string
+                    "cover_path"?: string | null,"created_at"?: string,"id"?: string,"owner_id"?: string,"position"?: number,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "highlights_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profile_notification_prefs": {
+                  Row: {
+                    "live": boolean,"owner_id": string,"posts": boolean,"reels": boolean,"stories": boolean,"target_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "live"?: boolean,"owner_id"?: string,"posts"?: boolean,"reels"?: boolean,"stories"?: boolean,"target_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "live"?: boolean,"owner_id"?: string,"posts"?: boolean,"reels"?: boolean,"stories"?: boolean,"target_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profile_notification_prefs_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "profile_notification_prefs_target_id_fkey"
+      columns: ["target_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
+                  Row: {
+                    "avatar_path": string | null,"bio": string,"created_at": string,"followers_count": number,"following_count": number,"full_name": string,"id": string,"is_private": boolean,"links": NonNullable<Json>,"posts_count": number,"updated_at": string,"username": string
+                  }
+                  Insert: {
+                    "avatar_path"?: string | null,"bio"?: string,"created_at"?: string,"followers_count"?: number,"following_count"?: number,"full_name"?: string,"id": string,"is_private"?: boolean,"links"?: NonNullable<Json>,"posts_count"?: number,"updated_at"?: string,"username": string
+                  }
+                  Update: {
+                    "avatar_path"?: string | null,"bio"?: string,"created_at"?: string,"followers_count"?: number,"following_count"?: number,"full_name"?: string,"id"?: string,"is_private"?: boolean,"links"?: NonNullable<Json>,"posts_count"?: number,"updated_at"?: string,"username"?: string
                   }
                   Relationships: [
                     
+                  ]
+                },"saved_collection_items": {
+                  Row: {
+                    "collection_id": string,"created_at": string,"post_id": string
+                  }
+                  Insert: {
+                    "collection_id": string,"created_at"?: string,"post_id": string
+                  }
+                  Update: {
+                    "collection_id"?: string,"created_at"?: string,"post_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_collection_items_collection_id_fkey"
+      columns: ["collection_id"]
+isOneToOne: false
+      referencedRelation: "saved_collections"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"saved_collections": {
+                  Row: {
+                    "cover_post_id": string | null,"created_at": string,"id": string,"name": string,"owner_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "cover_post_id"?: string | null,"created_at"?: string,"id"?: string,"name": string,"owner_id"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "cover_post_id"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"owner_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_collections_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"username_changes": {
+                  Row: {
+                    "changed_at": string,"id": string,"new_username": string,"old_username": string,"user_id": string
+                  }
+                  Insert: {
+                    "changed_at"?: string,"id"?: string,"new_username": string,"old_username": string,"user_id": string
+                  }
+                  Update: {
+                    "changed_at"?: string,"id"?: string,"new_username"?: string,"old_username"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "username_changes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
@@ -93,17 +269,34 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "auth_lookup":
+            "account_about":
+{ Args: { "p_user_id": string }; Returns: {
+              "avatar_path": string,"date_joined": string,"former_usernames_count": number,"id": string,"username": string
+            }[]
+                           },
+"approve_follow_request":
+{ Args: { "requester": string }; Returns: boolean
+                           },
+"auth_lookup":
 { Args: { "identifier": string }; Returns: {
               "email": string,"has_profile": boolean,"user_id": string,"username": string
             }[]
                            },
+"can_view_profile":
+{ Args: { "target": string }; Returns: boolean
+                           },
 "complete_signup":
 { Args: { "p_birthday": string,"p_full_name": string,"p_username": string }; Returns: {
               "avatar_path": string | null,
+"bio": string,
 "created_at": string,
+"followers_count": number,
+"following_count": number,
 "full_name": string,
 "id": string,
+"is_private": boolean,
+"links": NonNullable<Json>,
+"posts_count": number,
 "updated_at": string,
 "username": string
             }
@@ -113,16 +306,40 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"follow_user":
+{ Args: { "target": string }; Returns: string
+                           },
+"get_profile":
+{ Args: { "p_user_id"?: string,"p_username"?: string }; Returns: {
+              "avatar_path": string,"bio": string,"can_view": boolean,"created_at": string,"followers_count": number,"following_count": number,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"is_private": boolean,"is_self": boolean,"links": Json,"mutual_count": number,"mutual_preview": Json,"posts_count": number,"requested": boolean,"username": string
+            }[]
+                           },
+"is_valid_profile_links":
+{ Args: { "links": Json }; Returns: boolean
+                           },
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
+                           },
+"people_picker":
+{ Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
+              "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"username": string
+            }[]
+                           },
+"profile_connections":
+{ Args: { "p_kind": string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string,"p_user_id": string }; Returns: {
+              "avatar_path": string,"followed_at": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"is_self": boolean,"requested": boolean,"username": string
+            }[]
                            },
 "suggest_usernames":
 { Args: { "full_name": string,"max_count"?: number }; Returns: (string)[]
                            },
 "suggested_accounts":
 { Args: { "max_count"?: number }; Returns: {
-              "avatar_path": string,"full_name": string,"id": string,"reason": string,"username": string
+              "avatar_path": string,"full_name": string,"id": string,"is_private": boolean,"reason": string,"username": string
             }[]
+                           },
+"unfollow_user":
+{ Args: { "target": string }; Returns: undefined
                            },
 "username_available":
 { Args: { "name": string }; Returns: boolean

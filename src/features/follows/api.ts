@@ -7,6 +7,7 @@ export type SuggestedAccount = {
   username: string;
   full_name: string;
   avatar_path: string | null;
+  is_private: boolean;
   reason: 'contact' | 'popular';
 };
 
@@ -26,31 +27,16 @@ export function useSuggestedAccounts(enabled = true) {
   });
 }
 
-/**
- * Follow / unfollow. Uses the Phase 1 `follows` stub (Phase 2 adds follow requests for private
- * accounts — at that point this becomes "Requested" for private profiles).
- */
+/** Bulk "Follow all" on page 11 (single buttons use `FollowButton` / `useFollowAction`). */
 export function useFollow() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, follow }: { userId: string; follow: boolean }) => {
-      const { data: auth } = await supabase.auth.getUser();
-      const me = auth.user?.id;
-      if (!me) throw new Error('Not signed in');
-      if (follow) {
-        const { error } = await supabase
-          .from('follows')
-          .insert({ follower_id: me, following_id: userId });
-        if (error && error.code !== '23505') throw error; // already following is fine
-      } else {
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', me)
-          .eq('following_id', userId);
-        if (error) throw error;
-      }
+      const { error } = follow
+        ? await supabase.rpc('follow_user', { target: userId })
+        : await supabase.rpc('unfollow_user', { target: userId });
+      if (error) throw error;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['follows'], refetchType: 'none' }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['profile'], refetchType: 'none' }),
   });
 }

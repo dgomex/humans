@@ -49,6 +49,20 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Humans uses your camera to take photos and scan QR codes.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "Humans saves images, like your QR code, to your photo library.",
+          "granularPermissions": ["photo"]
+        }
+      ],
+      [
         "expo-contacts",
         {
           "contactsPermission": "Humans uses your contacts to help you find people you know. Contacts are matched using one-way hashes of email addresses."

@@ -11,18 +11,32 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   (recovery)/new-password # gate recovery (after a recovery code)
   (session)/save-login    # gate savePrompt ("Save your login info?" after password login)
   legal/[doc].tsx         # placeholder Terms / Privacy / Cookies pages
-  (tabs)/                 # bottom tabs: index (home), explore, create (stub, opens modal), reels, profile
+  (tabs)/                 # bottom tabs; each tab is its own Stack so pushed screens keep the tab bar:
+    (home)/index, (explore)/explore, (reels)/reels, (profile)/profile, create (stub, opens modal)
+    (home,explore,reels,profile)/  # shared routes (array group) + the per-tab Stack layout:
+      [username]/{index,connections,about}  # profiles (16–18), followers/following/mutual (21–22), About (23)
+      # cold deep links land in the first group alphabetically (Explore); in-app pushes stay in the current tab
+  edit-profile/{index,[field],links}  # page 19 (no tab bar)
+  saved/{index,new,[id]/index,[id]/edit}  # pages 26–27
+  close-friends, favorites            # pages 30–31
+  qr/{index,scan}                     # page 24 (full-screen modals)
+  follow-requests                     # STUB of page 72 (Phase 8)
+  highlights/new                      # placeholder until the Phase 5 editor
   (modals)/               # modal routes: create-entry (Phase 3), comments, share, options…
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
-  [username].tsx, p/[id].tsx, reel/[id].tsx, stories/[userId].tsx, direct/…
+  p/[id].tsx, reel/[id].tsx, stories/[userId].tsx, direct/…   # future
 src/
-  components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text (barrel: @/components)
+  components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text, TextField, UserRow, ActionRow/ActionGroup (sheet menus), SearchField (barrel: @/components)
   features/<area>/        # per-area logic: api.ts (Supabase queries), hooks.ts, components/
   features/shell/         # PlaceholderScreen for routes whose page isn't built yet
   features/auth/          # AuthProvider (gate, sessions, accounts), api.ts, savedAccounts.ts, components/ (AuthStep, LoginForm, CodeStep, SaveLoginView, AccountSwitcher, AppLogo, LanguageSelector)
   features/onboarding/    # SignupDraft (values across steps), contacts.ts (hashed email sync)
-  features/follows/       # api.ts (useFollow, useSuggestedAccounts), FollowButton  [Phase 2 owns]
-  features/profile/       # avatar.ts (pick, resize 320px, upload, swap)
+  features/follows/       # api.ts (useSuggestedAccounts, bulk useFollow), FollowButton (Follow / Follow back / Following / Requested)
+  features/profile/       # api.ts (get_profile, follow actions, lists, close friends/favorites, bell, follow requests), format.ts (counts, profile URLs, openProfile),
+                          # avatar.ts, saveQrImage(.web).ts, components/ (ProfileView, ProfileTabs, BioText, HighlightsRow, SuggestedStrip, ProfileSheets, ChangePhotoSheet, PeoplePickerList, TopBar)
+  features/saved/         # api.ts (collections), CollectionTile
+  lib/navigation.ts       # goBack(fallback): back, or replace when there's no history (deep links / reloads)
+  lib/useDebounced.ts     # debounced value (search fields)
   lib/dialog.ts           # showDialog(): native Alert, browser confirm/alert on web — use instead of Alert
   lib/supabase.ts         # supabase-js client (publishable key + chunked SecureStore session)
   lib/secureStorage.ts    # Keychain/Keystore adapter (chunks values >1.8 KB)
@@ -34,6 +48,7 @@ src/
 scripts/
   test-storage-rls.mjs    # two-user storage RLS check against the local stack
   test-auth-flow.mjs      # Phase 1 end-to-end auth + RLS check (reads codes from Mailpit)
+  test-profile-rls.mjs    # Phase 2 privacy / follows / lists / collections RLS check (three fresh users)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
 supabase/
   config.toml
@@ -100,12 +115,27 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `<bucket>_{select,insert,update,delete}_owner` | storage.objects RLS policies | Phase 0 | 20 policies; check `(storage.foldername(name))[1] = auth.uid()` |
 | `profiles` | table | Phase 1 (pages 008/009) | id = auth.users.id; username (unique, lowercase, `is_valid_username`), full_name ≤64, avatar_path (own folder). RLS: select authenticated; update own (username, full_name, avatar_path only); no client insert/delete |
 | `account_private` | table | Phase 1 (pages 007/009) | birthday, terms_accepted_at. RLS: select own; writes only via `complete_signup` |
-| `follows` | table (**stub**) | Phase 1 (page 011) → owned by Phase 2 | (follower_id, following_id) PK, no self-follow. RLS: select authenticated; insert/delete own |
+| `follows` | table | Phase 1 stub → finished Phase 2 | (follower_id, following_id) PK, no self-follow. RLS: select when `can_view_profile` of either side; insert own **only to public targets** (private → `follow_requests` / `follow_user`); delete by follower (unfollow) or followed (remove follower). Trigger keeps profile counters, removes the favorite on unfollow |
+| `profiles` (Phase 2 columns) | columns | Phase 2 (pages 16–19) | `bio` ≤150, `links` jsonb ≤5 `{url,title}` (`is_valid_profile_links`), `is_private`; trigger-kept `followers_count`, `following_count`, `posts_count` (Phase 3 maintains posts). Client may update `username, full_name, avatar_path, bio, links, is_private`. Going public auto-approves pending requests |
+| `follow_requests` | table | Phase 2 (page 18) | (requester_id, target_id). RLS: select/delete by either party; insert own only to private targets. Approve via `approve_follow_request` (UI = page 72, stub in Phase 2) |
+| `close_friends` | table | Phase 2 (page 30) | (owner_id, friend_id). Owner-only RLS; members can't see the list (Phase 5 checks membership with a definer helper) |
+| `favorites` | table | Phase 2 (page 31) | (owner_id, favorite_id). Owner-only RLS; trigger: must follow, max 50 (`favorites_must_follow`, `favorites_limit`) |
+| `profile_notification_prefs` | table | Phase 2 (page 17) | Bell per profile: posts/stories/reels/live. Owner-only RLS. Delivery = Phase 8 |
+| `highlights` | table | Phase 2 (page 25, row only) | id, owner_id, title ≤32, cover_path (`highlights-covers/{owner}/…`), position. RLS: select `can_view_profile(owner)`; write own. **Phase 5 adds** `highlight_items` + the editor |
+| `saved_collections`, `saved_collection_items` | tables | Phase 2 (pages 26/27) | Owner-only RLS. `post_id` has **no FK yet: Phase 3 adds it** (→ posts, on delete cascade). Saves (`saves`) = Phase 4 |
+| `username_changes` | table | Phase 2 (page 23) | Trigger-logged on every username change (old, new, changed_at). RLS: owner select only; count exposed via `account_about` |
+| `account_about(uuid)` | RPC, security definer | Phase 2 (page 23) | id, username, avatar, date_joined, former_usernames_count |
+| `is_valid_username` reserved list | function update | Phase 2 | + route names: archive, create, dev, favorites, highlights, legal, profile, qr, saved |
+| `can_view_profile(uuid)` | function, security definer | Phase 2 | self, public, or approved follower. **Use in every later visibility policy** (posts, stories, reels…) |
+| `follow_user(uuid)` → 'following'/'requested', `unfollow_user(uuid)`, `approve_follow_request(uuid)` | RPCs | Phase 2 | unfollow also cancels a pending request |
+| `get_profile(p_username, p_user_id)` | RPC (invoker) | Phase 2 | profile + relationship (is_self, can_view, i_follow, follows_me, requested, is_close_friend, is_favorite, mutual_count, mutual_preview[3]) |
+| `profile_connections(user, kind, search, offset, limit)` | RPC (invoker) | Phase 2 (pages 21/22) | kind = followers / following / mutual; empty unless `can_view_profile` (mutual always allowed) |
+| `people_picker(search, limit)` | RPC (invoker) | Phase 2 (pages 30/31) | my followers ∪ following, with close-friend/favorite flags |
 | `contact_hashes` | table | Phase 1 (page 011) | (owner_id, sha256 of lowercased email). RLS: select/insert/delete own |
 | `is_valid_username(text)` | function (immutable) | Phase 1 | Instagram username rules + reserved names; used by the profiles check |
 | `username_available(text)`, `suggest_usernames(text,int)` | RPCs (authenticated) | Phase 1 (page 008) | suggestions use `unaccent` |
 | `complete_signup(username, full_name, birthday)` | RPC, security definer | Phase 1 (page 009) | creates profile + private row; errors `too_young` (<13), `username_taken`, `invalid_username` |
-| `suggested_accounts(int)` | RPC, security definer | Phase 1 (page 011) | contacts (hashed email match) first, then most-followed; excludes self + already followed |
+| `suggested_accounts(int)` | RPC, security definer | Phase 1 (page 011), updated Phase 2 | contacts (hashed email match) first, then most-followed; excludes self, followed, requested; returns `is_private` |
 | `auth_lookup(text)` | RPC, security definer, **service_role only** | Phase 1 | username/email → account; used by `account-auth` |
 | `set_updated_at()` | trigger function | Phase 1 | profiles.updated_at |
 | `unaccent` | extension (schema extensions) | Phase 1 | |

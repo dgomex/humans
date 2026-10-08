@@ -72,3 +72,15 @@ export async function uploadAvatar(profile: Profile, localUri: string): Promise<
   }
   return data;
 }
+
+/** "Remove current picture": clear the profile's avatar, then delete the file. */
+export async function removeAvatar(profile: Profile): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_path: null })
+    .eq('id', profile.id);
+  if (error) throw error;
+  if (profile.avatar_path) {
+    await removeFiles(BUCKETS.avatars, [profile.avatar_path]).catch(() => {});
+  }
+}

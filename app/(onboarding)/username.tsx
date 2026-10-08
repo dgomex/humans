@@ -1,34 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Button, Text, TextField, type TextFieldStatus } from '@/components';
 import { isUsernameAvailable, suggestUsernames } from '@/features/auth/api';
+import { usernameRuleError } from '@/features/auth/username';
 import { AuthStep } from '@/features/auth/components/AuthStep';
 import { useSignupDraft } from '@/features/onboarding/SignupDraft';
+import { useDebounced } from '@/lib/useDebounced';
 import { useTheme } from '@/theme';
-
-/** Client mirror of public.is_valid_username (the database is the source of truth). */
-function usernameRuleError(name: string): string | null {
-  if (!name) return null;
-  if (name.length > 30) return 'Enter a username that is 30 characters or less.';
-  if (!/^[a-z0-9._]+$/.test(name))
-    return 'Usernames can only use letters, numbers, underscores and periods.';
-  if (name.includes('..')) return "You can't use more than one period in a row.";
-  if (name.startsWith('.') || name.endsWith('.'))
-    return "You can't start or end a username with a period.";
-  return null;
-}
-
-function useDebounced<T>(value: T, ms: number): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
-}
 
 /** Page 008 — Create a username (pre-filled suggestion + live availability). */
 export default function UsernameScreen() {

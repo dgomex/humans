@@ -80,6 +80,23 @@ function RootNavigator() {
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
+        {/* Phase 2 — Profile (screens without the tab bar) */}
+        <Stack.Screen name="edit-profile/index" />
+        <Stack.Screen name="edit-profile/[field]" />
+        <Stack.Screen name="edit-profile/links" />
+        <Stack.Screen name="saved/index" />
+        <Stack.Screen name="saved/new" />
+        <Stack.Screen name="saved/[id]/index" />
+        <Stack.Screen name="saved/[id]/edit" />
+        <Stack.Screen name="close-friends" />
+        <Stack.Screen name="favorites" />
+        <Stack.Screen name="follow-requests" />
+        <Stack.Screen name="highlights/new" />
+        <Stack.Screen
+          name="qr/index"
+          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="qr/scan" options={{ presentation: 'fullScreenModal' }} />
       </Stack.Protected>
       <Stack.Protected guard={g === 'signedOut'}>
         <Stack.Screen name="(auth)" />

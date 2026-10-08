@@ -16,15 +16,25 @@ Single source of truth for progress. Update after **every** workflow step.
 - **Still to verify on a real phone (Expo Go):** native date picker (iOS wheel / Android dialog), photo upload (camera + library), contact sync, Profile-tab long-press, keychain session storage. Web can't exercise these.
 - Test accounts: `node scripts/create-test-user.mjs <username>` (logins go to git-ignored `.test-users.local.json`).
 
-Next: finish the on-device check of Phase 1, then Phase 2 — Profile (`/start-phase 2`).
+**Phase 2 — Profile:** built 2026-10-08 (pages 16–27, 30, 31; 28 Archive and 29 Your activity deferred to their owning phases by decision).
+- Verified: `node scripts/test-profile-rls.mjs` (42 checks: privacy, requests, lists, close friends, favorites, collections, bell), Phase 1 scripts still pass, DB lint clean, typecheck + lint clean, both native bundles compile, and clicked through on web (light + dark): own profile, private → requested → approved profile, Following sheet, lists, edit bio, links sheet, QR, Close friends, Saved collections.
+- **Still to verify on a real phone (Expo Go):** QR download + scanner (camera), photo change, share sheet, swipe between profile tabs, sheets' drag-to-dismiss.
+
+Next: Phase 3 — Content Creation (`/start-phase 3`): it provides `posts`, which fills the profile grids and saved collections.
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
 
 | Object | Created for page | Owning phase | Status |
 |---|---|---|---|
-| `follows` table (follower/following, select-all, insert/delete own) + `useFollow`, `FollowButton` | 011 | 2 — Profile | Stub: Phase 2 adds follow requests for private accounts, counts, notifications |
-| Own-profile placeholder (username ▾ switcher, temporary Log out) | 015 | 2 — Profile (page 16) / 11 — Settings (log out) | Stub |
+| `follows` table (follower/following, select-all, insert/delete own) + `useFollow`, `FollowButton` | 011 | 2 — Profile | **Resolved** in Phase 2 (privacy-aware RLS, requests, counters). Notifications still Phase 8 |
+| Own-profile placeholder (username ▾ switcher, temporary Log out) | 015 | 2 — Profile (page 16) / 11 — Settings (log out) | **Resolved** by page 16; Log out moved to the ☰ menu stub below |
+| ☰ "Settings and activity" sheet (Saved, Close Friends, Favorites, Follow requests, QR, Log out) | 016 | 11 — Settings (page 86) | Stub: replace with the real Settings hub |
+| `app/follow-requests.tsx` (Confirm / Delete) + `useFollowRequests` | 018 | 8 — Notifications (page 72) | Stub: move into Activity |
+| Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
+| Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
+| Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | Build editor + `highlight_items` in Phase 5 |
+| `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | Add FK + saves |
 
 ## Phase 0 — Foundation
 
@@ -63,22 +73,22 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 16 | Own Profile (grid / reels / tagged tabs) | — | ☐ | — | ☐ | ☐ |
-| 17 | Other user's Profile | — | ☐ | — | ☐ | ☐ |
-| 18 | Private account profile (locked state) | — | ☐ | — | ☐ | ☐ |
-| 19 | Edit Profile (name, username, pronouns, bio, links, gender) | — | ☐ | — | ☐ | ☐ |
-| 20 | Change profile photo sheet | — | ☐ | — | ☐ | ☐ |
-| 21 | Followers / Following lists | — | ☐ | — | ☐ | ☐ |
-| 22 | Mutual followers list | — | ☐ | — | ☐ | ☐ |
-| 23 | Profile options menu (share, QR code, copy URL, about this account) | — | ☐ | — | ☐ | ☐ |
-| 24 | QR code / Nametag page | — | ☐ | — | ☐ | ☐ |
-| 25 | Story Highlights – create / edit / cover selection | — | ☐ | — | ☐ | ☐ |
-| 26 | Saved (collections list) | — | ☐ | — | ☐ | ☐ |
-| 27 | Saved collection detail / create & edit collection | — | ☐ | — | ☐ | ☐ |
-| 28 | Archive (posts, stories, live archive) | — | ☐ | — | ☐ | ☐ |
-| 29 | Your activity (interactions, time spent, recently deleted) | — | ☐ | — | ☐ | ☐ |
-| 30 | Close Friends list management | — | ☐ | — | ☐ | ☐ |
-| 31 | Favorites list management | — | ☐ | — | ☐ | ☐ |
+| 16 | Own Profile (grid / reels / tagged tabs) | [spec](016-own-profile.md) | ☑ | Full clone | ☑ | ◐ |
+| 17 | Other user's Profile | [spec](017-user-profile.md) | ☑ | Full clone | ☑ | ◐ |
+| 18 | Private account profile (locked state) | [spec](018-private-profile.md) | ☑ | Full clone | ☑ | ◐ |
+| 19 | Edit Profile (name, username, pronouns, bio, links, gender) | [spec](019-edit-profile.md) | ☑ | Changes | ☑ | ◐ |
+| 20 | Change profile photo sheet | [spec](020-change-profile-photo.md) | ☑ | Changes | ☑ | ◐ |
+| 21 | Followers / Following lists | [spec](021-follow-lists.md) | ☑ | Changes | ☑ | ◐ |
+| 22 | Mutual followers list | [spec](022-mutual-followers.md) | ☑ | Changes | ☑ | ◐ |
+| 23 | Profile options menu (share, QR code, copy URL, about this account) | [spec](023-profile-options.md) | ☑ | Changes | ☑ | ◐ |
+| 24 | QR code / Nametag page | [spec](024-qr-code.md) | ☑ | Changes | ☑ | ◐ |
+| 25 | Story Highlights – create / edit / cover selection | [spec](025-highlights-editor.md) | ☑ | Changes | ◐ row only; editor in Phase 5 | ◐ |
+| 26 | Saved (collections list) | [spec](026-saved.md) | ☑ | Changes | ☑ | ◐ |
+| 27 | Saved collection detail / create & edit collection | [spec](027-saved-collection.md) | ☑ | Changes | ☑ | ◐ |
+| 28 | Archive (posts, stories, live archive) | [spec](028-archive.md) | ☑ | Deferred | — | — |
+| 29 | Your activity (interactions, time spent, recently deleted) | [spec](029-your-activity.md) | ☑ | Deferred | — | — |
+| 30 | Close Friends list management | [spec](030-close-friends.md) | ☑ | Full clone | ☑ | ◐ |
+| 31 | Favorites list management | [spec](031-favorites.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 3 — Content Creation
 

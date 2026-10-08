@@ -63,11 +63,11 @@ function TabsNavigator() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="(home)"
         options={{ title: 'Home', tabBarIcon: tabIcon('home', 'homeFilled') }}
       />
       <Tabs.Screen
-        name="explore"
+        name="(explore)"
         options={{ title: 'Search and explore', tabBarIcon: tabIcon('search', 'searchFilled') }}
       />
       <Tabs.Screen
@@ -82,11 +82,11 @@ function TabsNavigator() {
         }}
       />
       <Tabs.Screen
-        name="reels"
+        name="(reels)"
         options={{ title: 'Reels', tabBarIcon: tabIcon('reels', 'reelsFilled') }}
       />
       <Tabs.Screen
-        name="profile"
+        name="(profile)"
         options={{ title: 'Profile', tabBarIcon: ProfileTabIcon }}
         listeners={{
           // Page 015: long-press the Profile tab to switch accounts.

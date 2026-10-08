@@ -6,6 +6,7 @@ import { Button, Text, UserRow } from '@/components';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useFollow, useSuggestedAccounts } from '@/features/follows/api';
 import { FollowButton } from '@/features/follows/FollowButton';
+import type { FollowStatus } from '@/features/profile/api';
 import { avatarUrl } from '@/features/profile/avatar';
 import { useTheme } from '@/theme';
 
@@ -15,21 +16,21 @@ export default function SuggestionsScreen() {
   const auth = useAuth();
   const suggestions = useSuggestedAccounts();
   const followMany = useFollow();
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [status, setStatus] = useState<Record<string, FollowStatus>>({});
 
   const data = suggestions.data ?? [];
   const contacts = data.filter((s) => s.reason === 'contact');
-  const followedCount = Object.values(following).filter(Boolean).length;
+  const followedCount = Object.values(status).filter((v) => v !== 'none').length;
 
   function followAll() {
-    const next = { ...following };
+    const next = { ...status };
     for (const c of contacts) {
-      if (!next[c.id]) {
-        next[c.id] = true;
+      if (!next[c.id] || next[c.id] === 'none') {
+        next[c.id] = c.is_private ? 'requested' : 'following';
         followMany.mutate({ userId: c.id, follow: true });
       }
     }
-    setFollowing(next);
+    setStatus(next);
   }
 
   return (
@@ -78,8 +79,10 @@ export default function SuggestionsScreen() {
             trailing={
               <FollowButton
                 userId={item.id}
-                following={!!following[item.id]}
-                onChange={(v) => setFollowing((f) => ({ ...f, [item.id]: v }))}
+                username={item.username}
+                isPrivate={item.is_private}
+                status={status[item.id] ?? 'none'}
+                onChange={(v) => setStatus((f) => ({ ...f, [item.id]: v }))}
               />
             }
           />
