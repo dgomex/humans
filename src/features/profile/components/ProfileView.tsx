@@ -28,6 +28,8 @@ import { displayLink, formatCount, openConnections } from '../format';
 import { BioText } from './BioText';
 import { useChangePhotoSheet } from './ChangePhotoSheet';
 import { HighlightsRow } from './HighlightsRow';
+import { ringOf, useStoryRing } from '@/features/stories/api';
+import { setStoryQueue } from '@/features/stories/viewerQueue';
 import { FollowingSheet, LinksSheet } from './ProfileSheets';
 import { PROFILE_TABS, ProfileTabBar, ProfileTabPages, type ProfileTabKey } from './ProfileTabs';
 import { SuggestedStrip } from './SuggestedStrip';
@@ -97,7 +99,9 @@ export function ProfileView({
         {isOwn ? (
           <CompleteProfile profile={profile} onFindPeople={() => setShowSuggestions(true)} />
         ) : null}
-        {locked ? null : <HighlightsRow highlights={highlights.data ?? []} isOwn={isOwn} />}
+        {locked ? null : (
+          <HighlightsRow highlights={highlights.data ?? []} isOwn={isOwn} ownerId={profile.id} />
+        )}
       </View>
       {locked ? <PrivateNotice /> : <ProfileTabBar active={tab} onChange={selectTab} />}
       {locked ? (
@@ -120,6 +124,8 @@ export function ProfileView({
 function Identity({ profile }: { profile: ProfileDetails }) {
   const { colors, spacing } = useTheme();
   const isOwn = profile.is_self;
+  // Page 52: a ring around the picture when there are active stories you can see.
+  const ring = useStoryRing(profile.can_view ? profile.id : undefined);
   const canOpenLists = profile.can_view;
 
   const stats: { label: string; value: number; onPress?: () => void }[] = [
@@ -142,12 +148,29 @@ function Identity({ profile }: { profile: ProfileDetails }) {
         <Avatar
           uri={avatarUrl(profile.avatar_path)}
           size={AVATAR}
-          onPress={isOwn ? () => router.push('/compose') : undefined}
-          accessibilityLabel={isOwn ? 'Add to your story' : `${profile.username}'s profile picture`}
+          // Your own active stories keep the colored ring (you never "see" them), like the tray.
+          ring={isOwn && ring.data ? 'unseen' : ringOf(ring.data)}
+          onPress={
+            ring.data
+              ? () => {
+                  setStoryQueue([profile.id]);
+                  router.push({ pathname: '/stories/[userId]', params: { userId: profile.id } });
+                }
+              : isOwn
+                ? () => router.push('/story/camera')
+                : undefined
+          }
+          accessibilityLabel={
+            ring.data
+              ? `${profile.username}'s story`
+              : isOwn
+                ? 'Add to your story'
+                : `${profile.username}'s profile picture`
+          }
         />
         {isOwn ? (
           <Pressable
-            onPress={() => router.push('/compose')}
+            onPress={() => router.push('/story/camera')}
             accessibilityRole="button"
             accessibilityLabel="Add to your story"
             style={[

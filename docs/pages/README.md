@@ -31,7 +31,12 @@ Single source of truth for progress. Update after **every** workflow step.
 - **Still to verify on a real phone (Expo Go):** pinch-to-zoom overlay, double-tap heart + haptics, comments form sheet (detents, keyboard), video autoplay / shared mute in the feed, long-press bookmark, share "Share to…" OS sheet, scroller keeping position when earlier posts are revealed.
 - **Not built yet from page 29 (Your activity):** the "Interactions" section (your likes / comments) was scheduled for Phase 4 by the page 29 decision; it needs the Settings / Your activity hub (Phase 11) or a small screen now — ask before building.
 
-Next: Phase 5 — Stories (`/start-phase 5`): needs Phase 1 + the Phase 3 media pipeline (done) and the Home stories tray placement (done, own circle only).
+**Phase 5 — Stories:** built 2026-10-09 (pages 52–57, plus the page 25 highlight editor and the page 28 stories archive). Decisions: 52 Changes (replies stored until DMs), 53 Changes (+ Boomerang, Layout, Hands-free, Create), 54 Changes (core stickers + photo sticker, no GIF / location / filters), 55 Changes (full story settings now), 56 + 57 Full clone (archive Calendar, no Map).
+- Verified: `node scripts/test-stories-rls.mjs` (112 checks: publishing + file checks, Close Friends / private / hide-from visibility incl. signed URLs, tray + rings, views (48 h names), private likes, replies + reply settings, poll / quiz / slider / question / countdown rules incl. hidden quiz answers, mentions, Add yours chains, expiry, archive + purge, highlights, post sticker + resharing setting, reports, deletion), Phase 0–4 scripts still pass, DB lint clean, typecheck + lint clean, both native bundles compile. Clicked through on web (phone viewport, dark + light): tray rings (unseen / Close Friends / own) → viewer auto-advance, cube transition to the next user, countdown "Remind me", own story → Activity sheet (quiz voters, ranked viewers with likes / replies / answers), Create → text with @ suggestions → poll sticker → Your story (upload + publish), stories archive grid + calendar, highlight viewer, New highlight → profile row, story settings.
+- Demo data: `node scripts/seed-stories.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`).
+- **Still to verify on a real phone (Expo Go):** camera capture (tap / hold / Hands-free), Boomerang burst speed, Layout capture, library multi-pick, pinch / rotate of items and media, drawing feel, video stories + music playback, hold-to-pause, swipe up / down gestures, keyboard + quick reactions, Save to photos, upload queue resume after restart.
+
+Next: Phase 6 — Reels (`/start-phase 6`): needs Phase 3 (media pipeline) and Phase 4 (comments / share components), both done.
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -44,18 +49,22 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | `app/follow-requests.tsx` (Confirm / Delete) + `useFollowRequests` | 018 | 8 — Notifications (page 72) | Stub: move into Activity |
 | Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
 | Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
-| Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | Build editor + `highlight_items` in Phase 5 |
+| Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | **Resolved** in Phase 5 (editor, `highlight_items`, viewer) |
 | `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | **Resolved**: FK in Phase 3; `saves`, bookmark and real Saved grids in Phase 4 |
 | Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | **Resolved** by page 44 (own-post menu and "Remove me from post" now live in the shared ⋯ options sheet) |
 | Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | Stub: wire to Activity and Inbox |
-| Stories tray shows only your own "Your story" circle (toast) | 043 | 5 — Stories (52/53) | Stub: real tray + story camera |
-| Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | Stub: DM grid + post sticker |
+| Stories tray shows only your own "Your story" circle (toast) | 043 | 5 — Stories (52/53) | **Resolved** in Phase 5 (real tray, rings, upload progress) |
+| Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | "Add to story" **resolved** (post sticker); "Send to friends" still a Phase 9 stub |
 | "Mute <user>" (hidden-post panel, report follow-ups), Restrict, Block | 049/050 | 11 — Settings (92–94) | Stub: "coming soon" until `mutes` / `blocks` / `restricts` exist; feeds must then exclude them |
 | Report status / support requests (reports are stored only) | 050 | 11 — Settings (108) | Stub: no moderation UI |
 | `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | Stub: move into Activity |
 | `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | Stub: hashtag pages + search in Phase 7 |
-| ☰ menu gains "Archive" (posts archive, page 28 posts part) | 041 | 11 — Settings (page 86) / 5, 10 (stories, live archive) | Part of the ☰ stub |
+| ☰ menu gains "Archive" (posts + stories archive, page 28) | 041 | 11 — Settings (page 86) / 10 (live archive) | Part of the ☰ stub; stories archive added in Phase 5 |
 | Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Replace with real CC0/licensed tracks |
+| Story replies / quick reactions stored in `story_replies`; story ✈ share, "Send", viewer-row ✈ and share-screen "Send to chats" show "coming soon" | 052/055/056 | 9 — Direct (76) | Stub: move replies into DM threads, wire sending |
+| Story countdown reminders + mentions stored without notifications | 054 | 8 — Notifications (71) | Stub: notify mentioned users and reminder holders |
+| Story ⋯ "Mute" ("coming soon"); hashtag sticker tap ("coming soon") | 052 | 11 — Settings (94) / 7 — Explore (68) | Stub |
+| Story settings screen lives at `app/story-settings` | 055 | 11 — Settings (page 97) | Page 97 links to it |
 
 ## Phase 0 — Foundation
 
@@ -103,10 +112,10 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | 22 | Mutual followers list | [spec](022-mutual-followers.md) | ☑ | Changes | ☑ | ◐ |
 | 23 | Profile options menu (share, QR code, copy URL, about this account) | [spec](023-profile-options.md) | ☑ | Changes | ☑ | ◐ |
 | 24 | QR code / Nametag page | [spec](024-qr-code.md) | ☑ | Changes | ☑ | ◐ |
-| 25 | Story Highlights – create / edit / cover selection | [spec](025-highlights-editor.md) | ☑ | Changes | ◐ row only; editor in Phase 5 | ◐ |
+| 25 | Story Highlights – create / edit / cover selection | [spec](025-highlights-editor.md) | ☑ | Changes | ☑ row (Phase 2) + editor (Phase 5) | ◐ |
 | 26 | Saved (collections list) | [spec](026-saved.md) | ☑ | Changes | ☑ | ◐ |
 | 27 | Saved collection detail / create & edit collection | [spec](027-saved-collection.md) | ☑ | Changes | ☑ | ◐ |
-| 28 | Archive (posts, stories, live archive) | [spec](028-archive.md) | ☑ | Deferred | ◐ posts part (Phase 3); stories 5, live 10 | ◐ |
+| 28 | Archive (posts, stories, live archive) | [spec](028-archive.md) | ☑ | Deferred | ◐ posts (Phase 3) + stories (Phase 5); live 10 | ◐ |
 | 29 | Your activity (interactions, time spent, recently deleted) | [spec](029-your-activity.md) | ☑ | Deferred | — | — |
 | 30 | Close Friends list management | [spec](030-close-friends.md) | ☑ | Full clone | ☑ | ◐ |
 | 31 | Favorites list management | [spec](031-favorites.md) | ☑ | Full clone | ☑ | ◐ |
@@ -145,12 +154,12 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 52 | Story viewer (progress bars, reply, react, swipe between users) | — | ☐ | — | ☐ | ☐ |
-| 53 | Story camera | — | ☐ | — | ☐ | ☐ |
-| 54 | Story editor (text, stickers, drawing, mentions, music, links, polls, questions, quiz, countdown, emoji slider) | — | ☐ | — | ☐ | ☐ |
-| 55 | Story audience / share options (Your story vs. Close Friends) | — | ☐ | — | ☐ | ☐ |
-| 56 | Story viewers list & insights (own story) | — | ☐ | — | ☐ | ☐ |
-| 57 | Highlights viewer | — | ☐ | — | ☐ | ☐ |
+| 52 | Story viewer (progress bars, reply, react, swipe between users) | [spec](052-story-viewer.md) | ☑ | Changes | ☑ | ◐ |
+| 53 | Story camera | [spec](053-story-camera.md) | ☑ | Changes | ☑ | ◐ |
+| 54 | Story editor (text, stickers, drawing, mentions, music, links, polls, questions, quiz, countdown, emoji slider) | [spec](054-story-editor.md) | ☑ | Changes | ☑ | ◐ |
+| 55 | Story audience / share options (Your story vs. Close Friends) | [spec](055-story-audience.md) | ☑ | Changes | ☑ | ◐ |
+| 56 | Story viewers list & insights (own story) | [spec](056-story-viewers.md) | ☑ | Full clone | ☑ | ◐ |
+| 57 | Highlights viewer | [spec](057-highlights-viewer.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 6 — Reels
 
@@ -243,6 +252,6 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Push notifications (Expo Notifications + Edge Functions) | ☐ | |
 | Deep links (profile, post, reel, story) | ☐ | |
 | Realtime (DMs, typing, notifications, live comments) | ☐ | |
-| Media pipeline (compression, thumbnails, video) | ◐ | Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding |
+| Media pipeline (compression, thumbnails, video) | ◐ | Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding. Phase 5: stories reuse it (photos 1080 px, Boomerang frames / photo stickers 720 px) |
 | Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides; Explore in Phase 7 |
 | Moderation & reporting backend | ◐ | Phase 4: `reports` table + report flow (stored only, reporter's feeds hide the post); no review tooling |

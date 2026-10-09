@@ -101,7 +101,8 @@ export default function ReportScreen() {
 
 function Report() {
   const { type, id } = useLocalSearchParams<{ type: ReportTarget; id: string }>();
-  const target: ReportTarget = type === 'comment' || type === 'profile' ? type : 'post';
+  const target: ReportTarget =
+    type === 'comment' || type === 'profile' || type === 'story' ? type : 'post';
   const { colors, spacing } = useTheme();
   const toast = useToast();
   const report = useReport();
@@ -260,8 +261,10 @@ function Done({ target, id }: { target: ReportTarget; id: string }) {
           Thanks for your feedback
         </Text>
         <Text color="textSecondary" style={styles.text}>
-          We&apos;ll use it to help keep the community safe. You won&apos;t see this{' '}
-          {target === 'profile' ? 'account' : target} in your feed anymore.
+          We&apos;ll use it to help keep the community safe.
+          {target === 'story'
+            ? ''
+            : ` You won't see this ${target === 'profile' ? 'account' : target} in your feed anymore.`}
         </Text>
       </View>
       <FollowUps target={target} id={id} />

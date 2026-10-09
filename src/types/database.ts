@@ -231,6 +231,37 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"highlight_items": {
+                  Row: {
+                    "added_at": string,"highlight_id": string,"owner_id": string,"position": number,"story_id": string
+                  }
+                  Insert: {
+                    "added_at"?: string,"highlight_id": string,"owner_id"?: string,"position"?: number,"story_id": string
+                  }
+                  Update: {
+                    "added_at"?: string,"highlight_id"?: string,"owner_id"?: string,"position"?: number,"story_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "highlight_items_highlight_id_fkey"
+      columns: ["highlight_id"]
+isOneToOne: false
+      referencedRelation: "highlights"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "highlight_items_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "highlight_items_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"highlights": {
                   Row: {
                     "cover_path": string | null,"created_at": string,"id": string,"owner_id": string,"position": number,"title": string,"updated_at": string
@@ -663,6 +694,243 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"stories": {
+                  Row: {
+                    "audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"content": NonNullable<Json>,"created_at": string,"duration_ms": number | null,"files": (string)[],"height": number | null,"id": string,"keep_in_archive": boolean,"kind": string,"like_count": number,"media_path": string | null,"published_at": string | null,"reply_count": number,"reshared_post_id": string | null,"status": string,"thumb_path": string | null,"view_count": number,"width": number | null
+                  }
+                  Insert: {
+                    "audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"content"?: NonNullable<Json>,"created_at"?: string,"duration_ms"?: number | null,"files"?: (string)[],"height"?: number | null,"id"?: string,"keep_in_archive"?: boolean,"kind": string,"like_count"?: number,"media_path"?: string | null,"published_at"?: string | null,"reply_count"?: number,"reshared_post_id"?: string | null,"status"?: string,"thumb_path"?: string | null,"view_count"?: number,"width"?: number | null
+                  }
+                  Update: {
+                    "audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"content"?: NonNullable<Json>,"created_at"?: string,"duration_ms"?: number | null,"files"?: (string)[],"height"?: number | null,"id"?: string,"keep_in_archive"?: boolean,"kind"?: string,"like_count"?: number,"media_path"?: string | null,"published_at"?: string | null,"reply_count"?: number,"reshared_post_id"?: string | null,"status"?: string,"thumb_path"?: string | null,"view_count"?: number,"width"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stories_audio_track_id_fkey"
+      columns: ["audio_track_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stories_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stories_reshared_post_id_fkey"
+      columns: ["reshared_post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_hidden_from": {
+                  Row: {
+                    "created_at": string,"hidden_id": string,"owner_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"hidden_id": string,"owner_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"hidden_id"?: string,"owner_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_hidden_from_hidden_id_fkey"
+      columns: ["hidden_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_hidden_from_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_likes": {
+                  Row: {
+                    "created_at": string,"story_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"story_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"story_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_likes_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_likes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_mentions": {
+                  Row: {
+                    "author_id": string,"created_at": string,"story_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "author_id"?: string,"created_at"?: string,"story_id": string,"user_id": string
+                  }
+                  Update: {
+                    "author_id"?: string,"created_at"?: string,"story_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_mentions_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_mentions_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_mentions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_replies": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"is_reaction": boolean,"sender_id": string,"story_id": string
+                  }
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"is_reaction"?: boolean,"sender_id"?: string,"story_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"is_reaction"?: boolean,"sender_id"?: string,"story_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_replies_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_replies_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_settings": {
+                  Row: {
+                    "allow_resharing": boolean,"replies": string,"save_to_archive": boolean,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "allow_resharing"?: boolean,"replies"?: string,"save_to_archive"?: boolean,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "allow_resharing"?: boolean,"replies"?: string,"save_to_archive"?: boolean,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_settings_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_sticker_responses": {
+                  Row: {
+                    "body": string | null,"created_at": string,"id": string,"option": number | null,"sticker_id": string,"story_id": string,"type": string,"user_id": string,"value": number | null
+                  }
+                  Insert: {
+                    "body"?: string | null,"created_at"?: string,"id"?: string,"option"?: number | null,"sticker_id": string,"story_id": string,"type": string,"user_id"?: string,"value"?: number | null
+                  }
+                  Update: {
+                    "body"?: string | null,"created_at"?: string,"id"?: string,"option"?: number | null,"sticker_id"?: string,"story_id"?: string,"type"?: string,"user_id"?: string,"value"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_sticker_responses_sticker_id_fkey"
+      columns: ["sticker_id"]
+isOneToOne: false
+      referencedRelation: "story_stickers"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_sticker_responses_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_sticker_responses_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_stickers": {
+                  Row: {
+                    "author_id": string,"chain_id": string | null,"correct_option": number | null,"created_at": string,"data": NonNullable<Json>,"id": string,"story_id": string,"type": string
+                  }
+                  Insert: {
+                    "author_id"?: string,"chain_id"?: string | null,"correct_option"?: number | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: string,"story_id": string,"type": string
+                  }
+                  Update: {
+                    "author_id"?: string,"chain_id"?: string | null,"correct_option"?: number | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: string,"story_id"?: string,"type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_stickers_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_stickers_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"story_views": {
+                  Row: {
+                    "story_id": string,"viewed_at": string,"viewer_id": string
+                  }
+                  Insert: {
+                    "story_id": string,"viewed_at"?: string,"viewer_id"?: string
+                  }
+                  Update: {
+                    "story_id"?: string,"viewed_at"?: string,"viewer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "story_views_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "story_views_viewer_id_fkey"
+      columns: ["viewer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"username_changes": {
                   Row: {
                     "changed_at": string,"id": string,"new_username": string,"old_username": string,"user_id": string
@@ -693,6 +961,11 @@ isOneToOne: false
               "avatar_path": string,"date_joined": string,"former_usernames_count": number,"id": string,"username": string
             }[]
                            },
+"add_yours_chain":
+{ Args: { "p_chain": string,"p_limit"?: number,"p_offset"?: number }; Returns: {
+              "avatar_path": string,"is_active": boolean,"kind": string,"published_at": string,"story_id": string,"thumb_path": string,"user_id": string,"username": string
+            }[]
+                           },
 "approve_follow_request":
 { Args: { "requester": string }; Returns: boolean
                            },
@@ -709,6 +982,12 @@ isOneToOne: false
                            },
 "can_view_profile":
 { Args: { "target": string }; Returns: boolean
+                           },
+"can_view_story":
+{ Args: { "p_story": string }; Returns: boolean
+                           },
+"can_view_story_object":
+{ Args: { "object_name": string }; Returns: boolean
                            },
 "comment_likers":
 { Args: { "p_comment": string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string }; Returns: {
@@ -749,6 +1028,9 @@ isOneToOne: false
               "avatar_path": string,"bio": string,"can_view": boolean,"created_at": string,"followers_count": number,"following_count": number,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"is_private": boolean,"is_self": boolean,"links": Json,"mutual_count": number,"mutual_preview": Json,"posts_count": number,"requested": boolean,"username": string
             }[]
                            },
+"highlight_reel":
+{ Args: { "p_highlight": string }; Returns: Json[]
+                           },
 "home_feed":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
               "post_id": string,"reason": string,"repost_note": string,"reposted_by_id": string,"reposted_by_username": string,"score": number
@@ -763,15 +1045,26 @@ isOneToOne: false
 "is_valid_profile_links":
 { Args: { "links": Json }; Returns: boolean
                            },
+"is_valid_story_sticker":
+{ Args: { "p_correct": number,"p_data": Json,"p_type": string }; Returns: boolean
+                           },
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
                            },
 "mark_posts_seen":
 { Args: { "p_ids": (string)[] }; Returns: undefined
                            },
+"mark_stories_viewed":
+{ Args: { "p_ids": (string)[] }; Returns: undefined
+                           },
 "my_collab_invites":
 { Args: Record<PropertyKey, never>; Returns: {
               "author_avatar_path": string,"author_id": string,"author_username": string,"cover_path": string,"invited_at": string,"post_id": string
+            }[]
+                           },
+"my_purgeable_stories":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "files": (string)[],"id": string
             }[]
                            },
 "people_picker":
@@ -797,6 +1090,11 @@ isOneToOne: false
               "avatar_path": string,"followed_at": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"is_self": boolean,"requested": boolean,"username": string
             }[]
                            },
+"profile_highlights":
+{ Args: { "p_user": string }; Returns: {
+              "cover_path": string,"first_story_id": string,"first_story_kind": string,"first_thumb_path": string,"id": string,"item_count": number,"position": number,"title": string
+            }[]
+                           },
 "profile_posts":
 { Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_user": string }; Returns: {
               "archived_at": string,"audience": string,"author_id": string,"cover_path": string,"cover_type": string,"id": string,"is_pinned": boolean,"media_count": number,"published_at": string
@@ -804,6 +1102,9 @@ isOneToOne: false
                            },
 "publish_post":
 { Args: { "p_post": string }; Returns: string
+                           },
+"publish_story":
+{ Args: { "p_story": string }; Returns: string
                            },
 "refresh_posts_count":
 { Args: { "p_user": string }; Returns: undefined
@@ -813,6 +1114,9 @@ isOneToOne: false
                            },
 "respond_collab_invite":
 { Args: { "p_accept": boolean,"p_post": string }; Returns: boolean
+                           },
+"save_highlight":
+{ Args: { "p_cover_path": string,"p_highlight": string,"p_story_ids": (string)[],"p_title": string }; Returns: string
                            },
 "saved_posts":
 { Args: { "p_collection"?: string,"p_limit"?: number,"p_offset"?: number }; Returns: {
@@ -829,6 +1133,49 @@ isOneToOne: false
                            },
 "set_comment_pinned":
 { Args: { "p_comment": string,"p_pinned": boolean }; Returns: undefined
+                           },
+"stories_tray":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "avatar_path": string,"has_close_friends": boolean,"has_unseen": boolean,"is_own": boolean,"latest_at": string,"story_count": number,"user_id": string,"username": string
+            }[]
+                           },
+"story_archive":
+{ Args: { "p_limit"?: number,"p_offset"?: number }; Returns: {
+              "audience": string,"content": Json,"height": number,"id": string,"in_highlight": boolean,"is_active": boolean,"kind": string,"media_path": string,"published_at": string,"thumb_path": string,"width": number
+            }[]
+                           },
+"story_cards":
+{ Args: { "p_ids": (string)[] }; Returns: Json[]
+                           },
+"story_files_scoped":
+{ Args: { "p_author": string,"p_files": (string)[],"p_story": string }; Returns: boolean
+                           },
+"story_is_active":
+{ Args: { "p_story": string }; Returns: boolean
+                           },
+"story_reel":
+{ Args: { "p_user": string }; Returns: Json[]
+                           },
+"story_replies_allowed":
+{ Args: { "p_author": string,"p_sender": string }; Returns: boolean
+                           },
+"story_responses":
+{ Args: { "p_story": string }; Returns: {
+              "avatar_path": string,"body": string,"created_at": string,"id": string,"option": number,"sticker_id": string,"type": string,"user_id": string,"username": string,"value": number
+            }[]
+                           },
+"story_rings":
+{ Args: { "p_users": (string)[] }; Returns: {
+              "has_close_friends": boolean,"has_unseen": boolean,"latest_at": string,"story_count": number,"user_id": string
+            }[]
+                           },
+"story_sticker_results":
+{ Args: { "p_sticker": string }; Returns: Json
+                           },
+"story_viewers":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_search"?: string,"p_story": string }; Returns: {
+              "avatar_path": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"is_hidden": boolean,"liked": boolean,"reply": string,"reply_is_reaction": boolean,"responses": Json,"user_id": string,"username": string,"viewed_at": string
+            }[]
                            },
 "suggest_usernames":
 { Args: { "full_name": string,"max_count"?: number }; Returns: (string)[]

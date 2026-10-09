@@ -1,15 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Button, Icon, Text, UserRow, useToast } from '@/components';
-import { useAuth } from '@/features/auth/AuthProvider';
+import { Button, Icon, Text, UserRow, useToast } from '@/components';
 import { UploadBanner } from '@/features/create/components/UploadBanner';
 import { feedKeys, useHomeFeed } from '@/features/feed/api';
 import { FeedList } from '@/features/feed/components/FeedList';
 import { useSuggestedAccounts } from '@/features/follows/api';
+import { storyKeys } from '@/features/stories/api';
+import { StoriesTray } from '@/features/stories/components/StoriesTray';
 import { FollowButton } from '@/features/follows/FollowButton';
 import { avatarUrl } from '@/features/profile/avatar';
 import { openProfile } from '@/features/profile/format';
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   async function refresh() {
     setRefreshing(true);
     // New snapshot: re-rank from the top (the feed keeps a stable order while scrolling).
+    void qc.invalidateQueries({ queryKey: storyKeys.tray });
     await qc.resetQueries({ queryKey: feedKeys.home });
     setRefreshing(false);
   }
@@ -170,42 +172,6 @@ function HomeHeader() {
   );
 }
 
-/** Stories tray: only "Your story" until Phase 5 builds stories. */
-function StoriesTray() {
-  const { colors, spacing } = useTheme();
-  const { profile } = useAuth();
-  const toast = useToast();
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}
-    >
-      <Pressable
-        onPress={() => toast.show('Stories are coming soon')}
-        style={{ alignItems: 'center', gap: 4, width: 76 }}
-        accessibilityRole="button"
-        accessibilityLabel="Your story"
-      >
-        <View>
-          <Avatar uri={avatarUrl(profile?.avatar_path)} size={64} />
-          <View
-            style={[
-              styles.plus,
-              { backgroundColor: colors.primary, borderColor: colors.background },
-            ]}
-          >
-            <Icon name="add" size={14} color={colors.onPrimary} />
-          </View>
-        </View>
-        <Text variant="caption" color="textSecondary" numberOfLines={1}>
-          Your story
-        </Text>
-      </Pressable>
-    </ScrollView>
-  );
-}
-
 function Skeletons() {
   const { colors, spacing } = useTheme();
   return (
@@ -288,17 +254,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   menuRow: { flexDirection: 'row', alignItems: 'center', height: 48 },
-  plus: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   skelAvatar: { width: 32, height: 32, borderRadius: 16 },
   skelLine: { width: 120, height: 12, borderRadius: 6 },
 });

@@ -22,7 +22,7 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   close-friends, favorites            # pages 30–31
   qr/{index,scan}                     # page 24 (full-screen modals)
   follow-requests                     # STUB of page 72 (Phase 8)
-  highlights/new                      # placeholder until the Phase 5 editor
+  highlights/{new,[id]/edit}          # page 25 highlight editor (Phase 5)
   compose/                # Phase 3 creation flow (full-screen modal, own Stack + ComposerProvider):
     index (32 entry: Library · Camera · Drafts), camera (33), edit (34/35 crop + strip),
     details (36), tag-people (37), collaborators, music (39), advanced, alt-text, drafts (42)
@@ -31,10 +31,13 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   p/[id]/likes            # page 47 (?comment= for comment likers)
   p/[id]/edit             # page 41 Edit info
   report                  # page 50 report flow (?type=post|comment|profile&id=)
-  archive                 # posts archive (page 28, posts part)
+  archive                 # page 28: ▾ Stories archive (grid / calendar, Phase 5) · Posts archive (Phase 3)
+  stories/[userId]        # page 52 viewer (tray order); stories/highlight/[id] (57); stories/view?ids= (archive, Add yours)
+  story/                  # Phase 5 creation modal (own Stack + StoryComposerProvider): camera (53), editor (54), share (55)
+  story-settings/{index,hidden}       # page 55 story settings + Hide story from (page 97 links here later)
   collab-invites          # STUB until Activity (page 71): collaboration invites
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
-  reel/[id].tsx, stories/[userId].tsx, direct/…   # future
+  reel/[id].tsx, direct/…   # future
 src/
   components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text, TextField, UserRow, ActionRow/ActionGroup (sheet menus), SearchField (barrel: @/components)
   features/<area>/        # per-area logic: api.ts (Supabase queries), hooks.ts, components/
@@ -54,6 +57,12 @@ src/
                           # hides, impressions, comments, likers, reports), format.ts (timeAgo, shortAge, postUrl, shared mute),
                           # components/ (PostCard, PostMedia, ZoomOverlay + ZoomProvider, FeedList, PostSheets + PostSheetsProvider
                           # = share / ⋯ options / collections / why / repost note, CommentComposer)
+  features/stories/       # Phase 5: types.ts (content doc v1, 1080×1920 canvas), style.ts (story palette, fonts), api.ts (tray, rings,
+                          # reels / story_cards + signed URLs, views, likes, replies, sticker answers, viewers, archive, highlights,
+                          # settings, hide list), StoryComposer (flow state), StoryUploads (persisted upload queue), viewerQueue,
+                          # saveMedia(.web).ts, components/ (StoryCanvas, StickerView, StoryPlayer, StoryPager, StoryFooter,
+                          # StorySheets, ViewersSheet, StoriesTray, StoryThumb, ArchiveGrid, HighlightEditor, editor/{EditableElement,
+                          # TextTool, DrawTool, StickerTray})
   lib/navigation.ts       # goBack(fallback): back, or replace when there's no history (deep links / reloads)
   lib/useDebounced.ts     # debounced value (search fields)
   lib/dialog.ts           # showDialog(): native Alert, browser confirm/alert on web — use instead of Alert
@@ -72,6 +81,9 @@ scripts/
   test-feed-rls.mjs       # Phase 4 likes / comments / saves / reposts / feeds / hides / reports RLS check (four fresh users)
   seed-audio.mjs          # synthesize + upload the placeholder music catalog (re-run after db reset)
   seed-feed.mjs           # demo graph for the feed: dev.viewer + 4 accounts, generated photos, likes, comments, a repost
+  seed-stories.mjs        # demo stories (run after seed-feed): stickers, CF story, views / likes / replies, archive + highlight
+  test-stories-rls.mjs    # Phase 5 stories / stickers / views / replies / settings / highlights RLS check (four fresh users)
+  lib/seed.mjs            # shared seed helpers (PNG encoder, get-or-create accounts)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
 supabase/
   config.toml
@@ -118,7 +130,7 @@ docs/                     # PLAN, ARCHITECTURE, DECISIONS, pages/, EXPO_AGENTS.m
 | `avatars` | public | `{user_id}/{uuid}.jpg` |
 | `posts` | private (signed URLs; `can_view_post`) | `{user_id}/{post_id}/{media_id}.{jpg\|mp4\|mov}`, video poster `{media_id}-thumb.jpg` |
 | `reels` | private | `{user_id}/{reel_id}/video.mp4`, `cover.jpg` |
-| `stories` | private, expire after 24h (archive kept) | `{user_id}/{story_id}.{ext}` |
+| `stories` | private (signed URLs; `can_view_story`), visible 24h (archive / highlights kept) | `{user_id}/{story_id}/{media.jpg\|media.mp4\|thumb.jpg\|cell-N.jpg\|frame-N.jpg\|sticker-{id}.jpg}` |
 | `messages` | private (thread participants only) | `{thread_id}/{message_id}.{ext}` |
 | `highlights-covers` | public | `{user_id}/{highlight_id}.jpg` |
 | `audio` | public | `placeholder/{slug}.wav` (catalog, written by the service role only) |
@@ -133,7 +145,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `avatars` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write/select via API; anyone reads by public URL |
 | `posts` | bucket (private, 100 MB, image+video) | Phase 0 | Owner write. Viewer select `posts_select_viewer` (Phase 3) = `can_view_post_object(name)` |
 | `reels` | bucket (private, 100 MB, video+cover image) | Phase 0 | Owner-only. **Phase 6 adds** viewer select policy |
-| `stories` | bucket (private, 50 MB, image+video) | Phase 0 | Owner-only. **Phase 5 adds** viewer select (24h, close friends) |
+| `stories` | bucket (private, 50 MB, image+video) | Phase 0 | Owner write. Viewer select `stories_select_viewer` (Phase 5) = `can_view_story_object(name)` |
 | `messages` | bucket (private, 50 MB, image/video/audio/gif) | Phase 0 | **No policies = deny all.** Phase 9 adds thread-participant policies (path `{thread_id}/…`) |
 | `highlights-covers` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write |
 | `<bucket>_{select,insert,update,delete}_owner` | storage.objects RLS policies | Phase 0 | 20 policies; check `(storage.foldername(name))[1] = auth.uid()` |
@@ -145,7 +157,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `close_friends` | table | Phase 2 (page 30) | (owner_id, friend_id). Owner-only RLS; members can't see the list (Phase 5 checks membership with a definer helper) |
 | `favorites` | table | Phase 2 (page 31) | (owner_id, favorite_id). Owner-only RLS; trigger: must follow, max 50 (`favorites_must_follow`, `favorites_limit`) |
 | `profile_notification_prefs` | table | Phase 2 (page 17) | Bell per profile: posts/stories/reels/live. Owner-only RLS. Delivery = Phase 8 |
-| `highlights` | table | Phase 2 (page 25, row only) | id, owner_id, title ≤32, cover_path (`highlights-covers/{owner}/…`), position. RLS: select `can_view_profile(owner)`; write own. **Phase 5 adds** `highlight_items` + the editor |
+| `highlights` | table | Phase 2 (page 25, row only) | id, owner_id, title ≤32, cover_path (`highlights-covers/{owner}/…`), position. RLS: select `can_view_profile(owner)`; write own. Items: `highlight_items` (Phase 5) |
 | `saved_collections`, `saved_collection_items` | tables | Phase 2 (pages 26/27) | Owner-only RLS. `post_id` has **no FK yet: Phase 3 adds it** (→ posts, on delete cascade). Saves (`saves`) = Phase 4 |
 | `username_changes` | table | Phase 2 (page 23) | Trigger-logged on every username change (old, new, changed_at). RLS: owner select only; count exposed via `account_about` |
 | `account_about(uuid)` | RPC, security definer | Phase 2 (page 23) | id, username, avatar, date_joined, former_usernames_count |
@@ -198,3 +210,18 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `saved_posts(collection, offset, limit)` | RPC (invoker) | Phase 4 (pages 26/27) | All posts (null) or one collection; cover path for grids |
 | `profile_posts` kind `reposts` | function update | Phase 4 | Profile Reposts tab |
 | `is_valid_username` reserved list | function update | Phase 4 | + feed, report |
+| `stories` | table | Phase 5 (pages 52–57) | author_id, status uploading→published (only via `publish_story`), kind photo/video/text/boomerang/layout, media_path / thumb_path / files[] (all in `{author}/{story}/`), width/height, duration_ms ≤60 s, content (overlay JSON v1, <64 KB), audience everyone/close_friends, audio_track_id + start, reshared_post_id (post sticker; public Everyone posts whose author allows resharing, or your own), keep_in_archive, view/like/reply counters (author-only via `story_cards`). RLS select author or `can_view_story`; insert own as uploading (column grant); delete own; no updates |
+| `can_view_story(uuid)`, `can_view_story_object(text)`, `story_is_active(uuid)` | functions, security definer | Phase 5 | author, or published + `can_view_profile` + not hidden from you + CF membership for CF stories + (<24 h or in a highlight). Active = published <24 h (likes, replies, answers) |
+| `story_stickers` | table | Phase 5 (page 54) | poll / quiz / question / slider / countdown / add_yours, data (validated by `is_valid_story_sticker`), correct_option (quiz; **not selectable** by clients, column grant), chain_id (Add yours root). One of each type per story; insert only while the story is uploading; select `can_view_story` |
+| `story_sticker_responses` | table | Phase 5 (pages 52/56) | option / value / body per type; one per person except questions; not on own story; only while active. Select: responder or story author; delete only countdown reminders |
+| `story_mentions` | table | Phase 5 | (story_id, user_id) ≤10, insert while uploading. Select `can_view_story`. For Phase 8 notifications |
+| `story_views`, `story_likes`, `story_replies` | tables | Phase 5 (pages 52/56) | Views: insert own on visible stories (not your own), author reads names for 48 h. Likes: private (liker + author), active stories only. Replies (+ quick reactions): sender + author, gated by `story_replies_allowed`; **Phase 9 moves them into DMs**. Trigger-kept counters on `stories` |
+| `story_settings`, `story_hidden_from` | tables | Phase 5 (page 55) | Owner-only. Settings: replies everyone/following/off, allow_resharing, save_to_archive (defaults when no row). Hide list enforced in `can_view_story` (stories, highlights, files) |
+| `highlight_items` | table | Phase 5 (pages 25/57) | (highlight_id, story_id, owner_id, position). Select `can_view_profile(owner)` + `can_view_story`; insert own published stories into own highlights; ≤100; last item removed → highlight deleted |
+| `publish_story(uuid)` | RPC, security definer | Phase 5 | author only; every file in storage → published; copies save_to_archive |
+| `stories_tray()`, `story_rings(uuid[])` | RPCs (invoker) | Phase 5 (page 43/52) | Tray: you + followed accounts with active stories (unseen first, Favorites boost, newest). Rings: count / has_unseen / has_close_friends per user |
+| `story_cards(uuid[])`, `story_reel(user)`, `highlight_reel(id)` | RPCs (invoker) | Phase 5 | jsonb per story: author, media, content, audio, seen / liked, replies_allowed, stickers + my answers + `story_sticker_results` (definer: aggregates after answering, quiz answer revealed then), author-only counters + highlight ids |
+| `mark_stories_viewed(uuid[])`, `story_viewers(...)`, `story_responses(story)`, `add_yours_chain(...)` | RPCs (invoker) | Phase 5 (pages 52/56) | Viewers ranked by interaction; responses author-only; Add yours chain = visible stories with the chain's sticker |
+| `save_highlight(id, title, cover, ids[])`, `profile_highlights(user)`, `story_archive(...)`, `my_purgeable_stories()` | RPCs (invoker) | Phase 5 (pages 25/28/57) | Create / update a highlight in one call; highlights with ≥1 visible item; own archive; expired unarchived stories + abandoned uploads (client deletes files + rows on launch) |
+| `reports` target_type `story` | constraint + trigger update | Phase 5 | Story must be visible, not your own |
+| `is_valid_username` reserved list | function update | Phase 5 | + story |

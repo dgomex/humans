@@ -1,7 +1,7 @@
 # Page 025 — Story Highlights: create / edit / cover selection
 
 - **Phase:** 2 — Profile
-- **Status:** Verifying (built; on-device check pending)
+- **Status:** Verifying — row built in Phase 2; editor (archive picker, title, cover) built in Phase 5 (see page 057)
 - **Route:** `app/highlights/new.tsx`, `app/highlights/[id]/edit.tsx`
 - **Depends on:** **stories archive (Phase 5)**: highlights are made of archived stories. `highlights-covers` bucket (Phase 0).
 
@@ -37,7 +37,7 @@
 - `highlights-covers` bucket: `{user_id}/{highlight_id}.jpg`.
 
 ## 4. Implementation notes
-- `HighlightsRow` (row + "New") and `highlights` table now; `app/highlights/new.tsx` is a placeholder until Phase 5 builds the editor.
+- `HighlightsRow` (row + "New") and `highlights` table in Phase 2. Phase 5: `HighlightEditor` (`app/highlights/new.tsx`, `app/highlights/[id]/edit.tsx`), `highlight_items`, `save_highlight()`, covers from a story frame or the library, long-press menu on the row.
 
 ## 5. Acceptance checklist
 - [ ] Matches agreed feature list on Android

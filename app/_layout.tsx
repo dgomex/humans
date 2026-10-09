@@ -10,6 +10,7 @@ import { ToastProvider } from '@/components';
 import { AuthProvider, useAuth, type AuthGate } from '@/features/auth/AuthProvider';
 import { UploadQueueProvider } from '@/features/create/UploadQueue';
 import { PostSheetsProvider } from '@/features/feed/components/PostSheets';
+import { StoryUploadsProvider } from '@/features/stories/StoryUploads';
 import { ZoomProvider } from '@/features/feed/components/ZoomOverlay';
 import { queryClient } from '@/lib/queryClient';
 import { useTheme } from '@/theme';
@@ -44,12 +45,14 @@ export default function RootLayout() {
             <ToastProvider>
               <AuthProvider>
                 <UploadQueueProvider>
-                  <PostSheetsProvider>
-                    <ZoomProvider>
-                      <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-                      <RootNavigator />
-                    </ZoomProvider>
-                  </PostSheetsProvider>
+                  <StoryUploadsProvider>
+                    <PostSheetsProvider>
+                      <ZoomProvider>
+                        <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+                        <RootNavigator />
+                      </ZoomProvider>
+                    </PostSheetsProvider>
+                  </StoryUploadsProvider>
                 </UploadQueueProvider>
               </AuthProvider>
             </ToastProvider>
@@ -107,6 +110,26 @@ function RootNavigator() {
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen name="archive" />
+        {/* Phase 5 — Stories (pages 52–57) */}
+        <Stack.Screen
+          name="stories/[userId]"
+          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="stories/highlight/[id]"
+          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="stories/view"
+          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="story"
+          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="story-settings/index" />
+        <Stack.Screen name="story-settings/hidden" />
+        <Stack.Screen name="highlights/[id]/edit" />
         <Stack.Screen name="collab-invites" />
         <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
         {/* Phase 2 — Profile (screens without the tab bar) */}

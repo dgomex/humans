@@ -543,6 +543,7 @@ function ShareSheet({
   onRepost: (post: FeedPost) => void;
 }) {
   const toast = useToast();
+  const { profile } = useAuth();
   const { colors, spacing, radius } = useTheme();
   if (!post)
     return (
@@ -555,7 +556,17 @@ function ShareSheet({
     {
       icon: 'story',
       label: 'Add to story',
-      onPress: () => toast.show('Stories are coming soon'),
+      // Page 48 → page 54: the post as a sticker. Public Everyone posts (or your own) only; the
+      // author's "Allow sharing to story" setting is checked when the story is shared.
+      onPress: () => {
+        const own = post.author_id === profile?.id;
+        if (!own && (post.author.is_private || post.audience !== 'everyone')) {
+          toast.show('Only public posts can be added to stories');
+          return;
+        }
+        onClose();
+        router.push({ pathname: '/story/camera', params: { postId: post.id } });
+      },
     },
   ];
   if (post.can_repost || post.reposted) {

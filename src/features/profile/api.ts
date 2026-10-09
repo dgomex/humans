@@ -16,7 +16,7 @@ type Tables = Database['public']['Tables'];
 export type ProfileDetails = Fn['get_profile']['Returns'][number];
 export type Connection = Fn['profile_connections']['Returns'][number];
 export type PickerPerson = Fn['people_picker']['Returns'][number];
-export type Highlight = Tables['highlights']['Row'];
+export type Highlight = Fn['profile_highlights']['Returns'][number];
 export type NotificationPrefs = Tables['profile_notification_prefs']['Row'];
 export type ConnectionKind = 'followers' | 'following' | 'mutual';
 
@@ -182,15 +182,11 @@ export function useHighlights(userId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: profileKeys.highlights(userId ?? ''),
     enabled: !!userId && enabled,
+    // Only highlights with at least one story the viewer may see (Close Friends items, Phase 5).
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('highlights')
-        .select('*')
-        .eq('owner_id', userId!)
-        .order('position')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('profile_highlights', { p_user: userId! });
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
   });
 }
