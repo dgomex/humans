@@ -15,6 +15,7 @@ import {
 import { Button, Icon, Text, type IconName } from '@/components';
 import { useUploadQueue } from '@/features/create/UploadQueue';
 import { useProfilePosts, type GridPost } from '@/features/posts/api';
+import { formatCount } from '@/features/profile/format';
 import { useTheme } from '@/theme';
 
 export type ProfileTabKey = 'grid' | 'reels' | 'reposts' | 'tagged';
@@ -72,8 +73,9 @@ export const PROFILE_TABS = TABS.map((t) => t.key);
 
 /**
  * Tab pages, swipeable horizontally. The parent owns `pagerRef` so tab-bar taps can scroll it.
- * Grid and Tagged show posts (Phase 3), Reposts the posts this account reposted (Phase 4); Reels
- * keeps its empty state until Phase 6. Tiles open the post scroller (page 44) at that post.
+ * Grid and Tagged show posts (Phase 3), Reposts the posts this account reposted (Phase 4), Reels
+ * the account's reels with play counts (Phase 6, opens the reel scroller). Other tiles open the
+ * post scroller (page 44) at that post.
  * `loadMoreRef` is set to the active tab's "fetch next page" for the parent's scroll handler.
  */
 export function ProfileTabPages({
@@ -95,6 +97,7 @@ export function ProfileTabPages({
 }) {
   const { width } = useWindowDimensions();
   const posts = useProfilePosts(userId, 'grid');
+  const reels = useProfilePosts(userId, 'reels', active === 'reels');
   const tagged = useProfilePosts(userId, 'tagged', active === 'tagged');
   const reposts = useProfilePosts(userId, 'reposts', active === 'reposts');
   const { jobs } = useUploadQueue();
@@ -106,17 +109,20 @@ export function ProfileTabPages({
     : [];
   const byTab: Partial<Record<ProfileTabKey, GridItem[]>> = {
     grid: [...pending, ...(posts.data?.pages.flat() ?? []).map(toGridItem)],
+    reels: (reels.data?.pages.flat() ?? []).map(toGridItem),
     tagged: (tagged.data?.pages.flat() ?? []).map(toGridItem),
     reposts: (reposts.data?.pages.flat() ?? []).map(toGridItem),
   };
   const query =
     active === 'grid'
       ? posts
-      : active === 'tagged'
-        ? tagged
-        : active === 'reposts'
-          ? reposts
-          : null;
+      : active === 'reels'
+        ? reels
+        : active === 'tagged'
+          ? tagged
+          : active === 'reposts'
+            ? reposts
+            : null;
   useEffect(() => {
     if (!loadMoreRef) return;
     loadMoreRef.current = () => {
@@ -140,6 +146,7 @@ export function ProfileTabPages({
       {TABS.map((t) => {
         const loading =
           (t.key === 'grid' && posts.isPending) ||
+          (t.key === 'reels' && reels.isPending && active === 'reels') ||
           (t.key === 'tagged' && tagged.isPending) ||
           (t.key === 'reposts' && reposts.isPending && active === 'reposts');
         return (
@@ -150,6 +157,16 @@ export function ProfileTabPages({
               <ProfileGrid
                 items={byTab[t.key] ?? []}
                 empty={<EmptyTab tab={t.key} isOwn={isOwn} />}
+                onPressItem={
+                  t.key === 'reels'
+                    ? (item) =>
+                        router.push({
+                          pathname: '/reel/[id]',
+                          params: { id: item.id, source: 'profile', owner: userId },
+                        })
+                    : undefined
+                }
+                showPlays={t.key === 'reels'}
                 scroller={
                   t.key === 'reels' ? undefined : { source: t.key, owner: userId, title: username }
                 }
@@ -166,9 +183,11 @@ function toGridItem(p: GridPost): GridItem {
   return {
     id: p.id,
     uri: p.coverUrl,
-    kind: p.media_count > 1 ? 'carousel' : p.cover_type === 'video' ? 'video' : undefined,
+    kind: p.kind === 'reel' ? 'reel' : p.media_count > 1 ? 'carousel' : undefined,
     pinned: p.is_pinned,
     closeFriends: p.audience === 'close_friends',
+    plays: p.play_count,
+    coverOffset: p.kind === 'reel' ? Number(p.cover_offset ?? 0.5) : undefined,
   };
 }
 
@@ -180,6 +199,9 @@ export type GridItem = {
   closeFriends?: boolean;
   /** Upload in progress (own profile): dimmed with a spinner, not tappable. */
   pending?: boolean;
+  /** Reels: ▷ play count (null when hidden) and the cover's 3:4 window. */
+  plays?: number | null;
+  coverOffset?: number;
 };
 
 const KIND_ICON = { carousel: 'carousel', reel: 'reels', video: 'reelsFilled' } as const;
@@ -190,9 +212,12 @@ export function ProfileGrid({
   empty,
   onPressItem,
   scroller,
+  showPlays = false,
 }: {
   items: GridItem[];
   empty: ReactNode;
+  /** Reels tab: ▷ play counts instead of the type badge. */
+  showPlays?: boolean;
   /** Default: open the post. */
   onPressItem?: (item: GridItem) => void;
   /** Open the post inside a scroller of this grid (page 44) instead of on its own. */
@@ -225,15 +250,28 @@ export function ProfileGrid({
               source={{ uri: item.uri }}
               style={[StyleSheet.absoluteFill, item.pending && { opacity: 0.5 }]}
               contentFit="cover"
+              contentPosition={
+                item.coverOffset !== undefined
+                  ? { left: '50%', top: `${Math.round(item.coverOffset * 100)}%` }
+                  : undefined
+              }
               recyclingKey={item.id}
             />
+          ) : null}
+          {showPlays && item.plays !== null && item.plays !== undefined ? (
+            <View style={styles.plays}>
+              <Icon name="playCount" size={14} color={colors.onMedia} />
+              <Text variant="captionBold" style={{ color: colors.onMedia }}>
+                {formatCount(item.plays)}
+              </Text>
+            </View>
           ) : null}
           <View style={styles.badges}>
             {item.pinned ? <Icon name="pin" size={16} color={colors.onMedia} /> : null}
             {item.closeFriends ? (
               <Icon name="closeFriends" size={16} color={colors.closeFriends} />
             ) : null}
-            {item.kind ? (
+            {item.kind && !showPlays ? (
               <Icon name={KIND_ICON[item.kind]} size={16} color={colors.onMedia} />
             ) : null}
           </View>
@@ -293,7 +331,11 @@ function EmptyTab({ tab, isOwn }: { tab: ProfileTabKey; isOwn: boolean }) {
         </Text>
       ) : null}
       {content.cta ? (
-        <Button title={content.cta} variant="text" onPress={() => router.push('/compose')} />
+        <Button
+          title={content.cta}
+          variant="text"
+          onPress={() => router.push(tab === 'reels' ? '/compose/reel/camera' : '/compose')}
+        />
       ) : null}
     </View>
   );
@@ -302,6 +344,14 @@ function EmptyTab({ tab, isOwn }: { tab: ProfileTabKey; isOwn: boolean }) {
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row' },
   badges: { position: 'absolute', top: 6, right: 6, flexDirection: 'row', gap: 4 },
+  plays: {
+    position: 'absolute',
+    left: 6,
+    bottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 1 },
   empty: { alignItems: 'center', paddingTop: 48, paddingBottom: 64 },

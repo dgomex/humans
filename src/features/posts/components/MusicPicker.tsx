@@ -82,7 +82,7 @@ export function MusicPicker({
       trackId: picked.id,
       title: picked.title,
       artist: picked.artist,
-      audioPath: picked.audio_path,
+      audioPath: picked.audio_path ?? '',
       durationMs: picked.duration_ms,
       startMs,
     });

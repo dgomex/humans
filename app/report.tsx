@@ -102,7 +102,9 @@ export default function ReportScreen() {
 function Report() {
   const { type, id } = useLocalSearchParams<{ type: ReportTarget; id: string }>();
   const target: ReportTarget =
-    type === 'comment' || type === 'profile' || type === 'story' ? type : 'post';
+    type === 'comment' || type === 'profile' || type === 'story' || type === 'audio'
+      ? type
+      : 'post';
   const { colors, spacing } = useTheme();
   const toast = useToast();
   const report = useReport();

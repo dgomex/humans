@@ -37,7 +37,14 @@ import {
   type FeedReason,
   type HideReason,
 } from '../api';
+import { removeFromReels } from '@/features/reels/api';
+import { ReelOptionRows, SpeedSheet, downloadReel } from '@/features/reels/components/ReelSheets';
+import { reelUrl } from '@/features/reels/format';
+
 import { postUrl } from '../format';
+
+/** Reels link to /reel/<id>, posts to /p/<id>. */
+const linkOf = (post: FeedPost) => (post.kind === 'reel' ? reelUrl(post.id) : postUrl(post.id));
 
 type OptionsContext = { reason?: FeedReason; inFeed?: boolean };
 
@@ -62,6 +69,7 @@ type Open =
   | { kind: 'collections'; post: FeedPost }
   | { kind: 'why'; post: FeedPost; ctx: OptionsContext }
   | { kind: 'note'; post: FeedPost }
+  | { kind: 'speed' }
   | null;
 
 /**
@@ -157,11 +165,13 @@ export function PostSheetsProvider({ children }: { children: ReactNode }) {
         open={open?.kind === 'options' ? open : null}
         onClose={close}
         onWhy={(post, ctx) => setOpen({ kind: 'why', post, ctx })}
+        onSpeed={() => setOpen({ kind: 'speed' })}
         onSave={toggleSave}
         onHide={(post, reason) => {
           close();
           hidePost(post, reason);
           if (reason === 'not_interested') removeFromFeeds(qc, post.id);
+          if (reason === 'not_interested') removeFromReels(qc, post.id);
         }}
       />
       <ShareSheet
@@ -175,6 +185,7 @@ export function PostSheetsProvider({ children }: { children: ReactNode }) {
       <CollectionsSheet post={open?.kind === 'collections' ? open.post : null} onClose={close} />
       <WhySheet open={open?.kind === 'why' ? open : null} onClose={close} />
       <RepostNoteSheet post={open?.kind === 'note' ? open.post : null} onClose={close} />
+      <SpeedSheet visible={open?.kind === 'speed'} onClose={close} />
     </PostSheetsContext.Provider>
   );
 }
@@ -186,7 +197,7 @@ export function usePostSheets() {
 }
 
 async function copyLink(post: FeedPost, toast: ReturnType<typeof useToast>) {
-  await Clipboard.setStringAsync(postUrl(post.id));
+  await Clipboard.setStringAsync(linkOf(post));
   toast.show('Link copied');
 }
 
@@ -200,10 +211,12 @@ function OptionsSheet({
   onWhy,
   onSave,
   onHide,
+  onSpeed,
 }: {
   open: { post: FeedPost; ctx: OptionsContext } | null;
   onClose: () => void;
   onWhy: (post: FeedPost, ctx: OptionsContext) => void;
+  onSpeed: () => void;
   onSave: (post: FeedPost) => void;
   onHide: (post: FeedPost, reason: HideReason) => void;
 }) {
@@ -214,7 +227,7 @@ function OptionsSheet({
     <BottomSheet visible={!!open} onClose={onClose}>
       {post ? (
         isOwn ? (
-          <OwnPostOptions post={post} onClose={onClose} />
+          <OwnPostOptions post={post} onClose={onClose} onSpeed={onSpeed} />
         ) : (
           <OtherPostOptions
             post={post}
@@ -223,6 +236,7 @@ function OptionsSheet({
             onWhy={onWhy}
             onSave={onSave}
             onHide={onHide}
+            onSpeed={onSpeed}
           />
         )
       ) : null}
@@ -262,6 +276,7 @@ function OtherPostOptions({
   onWhy,
   onSave,
   onHide,
+  onSpeed,
 }: {
   post: FeedPost;
   ctx: OptionsContext;
@@ -269,6 +284,7 @@ function OtherPostOptions({
   onWhy: (post: FeedPost, ctx: OptionsContext) => void;
   onSave: (post: FeedPost) => void;
   onHide: (post: FeedPost, reason: HideReason) => void;
+  onSpeed: () => void;
 }) {
   const toast = useToast();
   const qc = useQueryClient();
@@ -276,7 +292,8 @@ function OtherPostOptions({
   const follow = useFollowAction();
   const favorites = useToggleList('favorites');
   const author = post.author;
-  const suggested = ctx.reason === 'suggested';
+  // Reels in the Reels feed offer "Not interested" (fewer reels like this), like suggestions.
+  const suggested = ctx.reason === 'suggested' || (post.kind === 'reel' && !!ctx.inFeed);
   const { profile } = useAuth();
   const untag = useRemoveMyTag(post.id, profile?.id);
   // Page 37: people tagged in a post can remove their own tag.
@@ -347,6 +364,9 @@ function OtherPostOptions({
           }}
         />
       </View>
+      {post.kind === 'reel' ? (
+        <ReelOptionRows post={post} onClose={onClose} onSpeed={onSpeed} />
+      ) : null}
       <ActionGroup>
         {post.i_follow_author ? (
           <ActionRow
@@ -408,7 +428,15 @@ function OtherPostOptions({
 }
 
 /** Own post: Phase 3's menu (Edit, Archive, Pin, Hide like count, Commenting, Delete) + links. */
-function OwnPostOptions({ post, onClose }: { post: FeedPost; onClose: () => void }) {
+function OwnPostOptions({
+  post,
+  onClose,
+  onSpeed,
+}: {
+  post: FeedPost;
+  onClose: () => void;
+  onSpeed: () => void;
+}) {
   const toast = useToast();
   const { spacing } = useTheme();
   const flags = useUpdatePostFlags(post.id);
@@ -441,10 +469,13 @@ function OwnPostOptions({ post, onClose }: { post: FeedPost; onClose: () => void
           label="Share to…"
           onPress={() => {
             onClose();
-            void Share.share({ message: postUrl(post.id), url: postUrl(post.id) });
+            void Share.share({ message: linkOf(post), url: linkOf(post) });
           }}
         />
       </View>
+      {post.kind === 'reel' ? (
+        <ReelOptionRows post={post} onClose={onClose} onSpeed={onSpeed} own />
+      ) : null}
       <ActionGroup>
         <ActionRow
           icon="edit"
@@ -591,10 +622,31 @@ function ShareSheet({
       label: 'Share to…',
       onPress: () => {
         onClose();
-        void Share.share({ message: postUrl(post.id), url: postUrl(post.id) });
+        void Share.share({ message: linkOf(post), url: linkOf(post) });
       },
     },
   );
+  // Page 64: reels can be remixed (63) and downloaded (own reels, or when the creator allows).
+  if (post.kind === 'reel' && post.can_remix) {
+    actions.push({
+      icon: 'remix',
+      label: 'Remix',
+      onPress: () => {
+        onClose();
+        router.push({ pathname: '/compose/reel/camera', params: { remix: post.id } });
+      },
+    });
+  }
+  if (post.kind === 'reel' && (post.author_id === profile?.id || post.allow_download)) {
+    actions.push({
+      icon: 'download',
+      label: 'Download',
+      onPress: () => {
+        onClose();
+        void downloadReel(post, toast);
+      },
+    });
+  }
 
   return (
     <BottomSheet visible onClose={onClose}>

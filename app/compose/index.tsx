@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { useComposer } from '@/features/create/ComposerProvider';
 import { useDrafts } from '@/features/create/drafts';
 import { useOpenLibrary } from '@/features/create/useOpenLibrary';
+import { newReelState } from '@/features/reels/composer';
 import { TopBar, TopBarButton } from '@/features/profile/components/TopBar';
 import { useTheme } from '@/theme';
 
@@ -50,6 +51,14 @@ export default function CreateEntryScreen() {
               router.push('/compose/camera');
             }}
           />
+          <Option
+            icon="reels"
+            label="Reel"
+            onPress={() => {
+              composer.reset(newReelState());
+              router.push('/compose/reel/camera');
+            }}
+          />
         </View>
 
         {drafts.data && drafts.data.length > 0 ? (
@@ -73,7 +82,7 @@ export default function CreateEntryScreen() {
                     key={d.id}
                     onPress={() => {
                       composer.reset(d.state);
-                      router.push('/compose/edit');
+                      router.push(d.state.reel ? '/compose/reel/edit' : '/compose/edit');
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="Open draft"
@@ -84,9 +93,13 @@ export default function CreateEntryScreen() {
                       style={StyleSheet.absoluteFill}
                       contentFit="cover"
                     />
-                    {d.state.items.length > 1 ? (
+                    {d.state.reel || d.state.items.length > 1 ? (
                       <View style={styles.badge}>
-                        <Icon name="carousel" size={16} color={colors.onMedia} />
+                        <Icon
+                          name={d.state.reel ? 'reels' : 'carousel'}
+                          size={16}
+                          color={colors.onMedia}
+                        />
                       </View>
                     ) : null}
                   </Pressable>
@@ -97,7 +110,7 @@ export default function CreateEntryScreen() {
         ) : null}
 
         <Text variant="caption" color="textSecondary" style={{ textAlign: 'center' }}>
-          Select up to 20 photos and videos (videos up to 60 seconds).
+          Posts: up to 20 photos and videos (videos up to 60 seconds). Reels: up to 3 minutes.
         </Text>
       </ScrollView>
     </SafeAreaView>

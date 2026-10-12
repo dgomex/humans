@@ -149,6 +149,26 @@ const glyphs = {
   time: { set: 'mc', name: 'clock-outline' },
   addYours: { set: 'mc', name: 'plus-box-multiple-outline' },
   arrowForward: { set: 'ion', name: 'arrow-forward' },
+  // Phase 6 — Reels
+  speed: { set: 'mc', name: 'speedometer' },
+  timer: { set: 'ion', name: 'timer-outline' },
+  align: { set: 'mc', name: 'image-filter-center-focus-weak' },
+  length: { set: 'mc', name: 'clock-time-four-outline' },
+  mic: { set: 'ion', name: 'mic-outline' },
+  micFilled: { set: 'ion', name: 'mic' },
+  trim: { set: 'mc', name: 'content-cut' },
+  split: { set: 'mc', name: 'call-split' },
+  remix: { set: 'mc', name: 'vector-combine' },
+  sideBySide: { set: 'mc', name: 'view-split-vertical' },
+  pip: { set: 'mc', name: 'picture-in-picture-bottom-right' },
+  sequence: { set: 'mc', name: 'arrow-right-bold-box-outline' },
+  timeline: { set: 'mc', name: 'filmstrip' },
+  mixer: { set: 'mc', name: 'tune-vertical' },
+  undoSegment: { set: 'mc', name: 'backspace-outline' },
+  cover: { set: 'mc', name: 'image-frame' },
+  linkReel: { set: 'mc', name: 'link-variant-plus' },
+  playCount: { set: 'ion', name: 'play-outline' },
+  disc: { set: 'mc', name: 'album' },
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof glyphs;

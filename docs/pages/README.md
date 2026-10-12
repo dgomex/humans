@@ -36,7 +36,12 @@ Single source of truth for progress. Update after **every** workflow step.
 - Demo data: `node scripts/seed-stories.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`).
 - **Still to verify on a real phone (Expo Go):** camera capture (tap / hold / Hands-free), Boomerang burst speed, Layout capture, library multi-pick, pinch / rotate of items and media, drawing feel, video stories + music playback, hold-to-pause, swipe up / down gestures, keyboard + quick reactions, Save to photos, upload queue resume after restart.
 
-Next: Phase 6 — Reels (`/start-phase 6`): needs Phase 3 (media pipeline) and Phase 4 (comments / share components), both done.
+**Phase 6 — Reels:** built 2026-10-09 (pages 58–64). Decisions: 58, 62, 64 Full clone; 59–61, 63 Changes (core camera / editor set, edit list played live, no green screen / trial reels / location).
+- Verified: `node scripts/test-reels-rls.mjs` (65 checks: reel publishing + document / cover / voiceover / length checks, private + Close Friends visibility incl. files, Reels feed ranking + Not interested, plays (once, not own, invisible ignored, masked with hidden counts), profile Reels tab, original audio (created, visibility, save, rename, use, audio page + grid, reports), remix rules (private / turned off / unseen / own), remix credit + count + orphaned remix, linked reels), Phase 0–5 scripts still pass, DB lint clean, typecheck + lint clean. Clicked through on web (phone viewport, dark + light): Reels tab (sequence remix incl. original, timed text, side-by-side remix, sped-up clips, music chip, Watch next part), ⋯ reel options + Playback speed, audio page + grid, Use audio → camera (permission screen), Home feed reel card, profile Reels tab → reel scroller, Create → Reel option.
+- Demo data: `node scripts/seed-reels.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`). Seeded reels are photo clips (no video encoder on the dev machine).
+- **Still to verify on a real phone (Expo Go):** recording segments (tap / hold, speed, timer, Align), video clip playback + cuts between clips (two alternating players), music / borrowed audio in sync, voiceover recording, timeline trim / split, cover frame grab, upload + publish of a recorded reel, remix recording side by side / react, Download to photos, swipe paging feel, hold-to-pause / edge 2×, scrubber.
+
+Next: Phase 7 — Search & Explore (`/start-phase 7`): needs Phase 3 (posts, hashtags stub) and Phase 4 (post views), both done; Explore can now include reels.
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -60,7 +65,11 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | Stub: move into Activity |
 | `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | Stub: hashtag pages + search in Phase 7 |
 | ☰ menu gains "Archive" (posts + stories archive, page 28) | 041 | 11 — Settings (page 86) / 10 (live archive) | Part of the ☰ stub; stories archive added in Phase 5 |
-| Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Replace with real CC0/licensed tracks |
+| Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Audio page built in Phase 6; catalog still generated placeholders — replace with real CC0/licensed tracks |
+| Remix / reel mention notifications (stored, not sent) | 063 | 8 — Notifications (71) | Stub: notify creators of remixes / uses of their audio |
+| Reel share "Send to friends" (DM grid) | 064 | 9 — Direct (76/77) | Stub (same as page 48) |
+| Global "Allow remixing" default | 061/063 | 11 — Settings (page 99) | Per-reel toggle only; page 99 adds the account default |
+| Hashtag taps in reel captions / stickers ("coming soon") | 058 | 7 — Explore (68) | Stub |
 | Story replies / quick reactions stored in `story_replies`; story ✈ share, "Send", viewer-row ✈ and share-screen "Send to chats" show "coming soon" | 052/055/056 | 9 — Direct (76) | Stub: move replies into DM threads, wire sending |
 | Story countdown reminders + mentions stored without notifications | 054 | 8 — Notifications (71) | Stub: notify mentioned users and reminder holders |
 | Story ⋯ "Mute" ("coming soon"); hashtag sticker tap ("coming soon") | 052 | 11 — Settings (94) / 7 — Explore (68) | Stub |
@@ -165,13 +174,13 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 58 | Reels feed (vertical full-screen player) | — | ☐ | — | ☐ | ☐ |
-| 59 | Reels camera / recorder (timer, speed, segments) | — | ☐ | — | ☐ | ☐ |
-| 60 | Reels editor (trim, audio, text, effects, voiceover) | — | ☐ | — | ☐ | ☐ |
-| 61 | Reel share details (caption, cover, audience) | — | ☐ | — | ☐ | ☐ |
-| 62 | Audio page (all reels using a sound) | — | ☐ | — | ☐ | ☐ |
-| 63 | Remix / Sequence entry | — | ☐ | — | ☐ | ☐ |
-| 64 | Reels comments & share (reuse Phase 4 components) | — | ☐ | — | ☐ | ☐ |
+| 58 | Reels feed (vertical full-screen player) | [spec](058-reels-feed.md) | ☑ | Full clone | ☑ | ◐ |
+| 59 | Reels camera / recorder (timer, speed, segments) | [spec](059-reels-camera.md) | ☑ | Changes | ☑ | ◐ |
+| 60 | Reels editor (trim, audio, text, effects, voiceover) | [spec](060-reels-editor.md) | ☑ | Changes | ☑ | ◐ |
+| 61 | Reel share details (caption, cover, audience) | [spec](061-reel-share-details.md) | ☑ | Changes | ☑ | ◐ |
+| 62 | Audio page (all reels using a sound) | [spec](062-audio-page.md) | ☑ | Full clone | ☑ | ◐ |
+| 63 | Remix / Sequence entry | [spec](063-remix-sequence.md) | ☑ | Changes | ☑ | ◐ |
+| 64 | Reels comments & share (reuse Phase 4 components) | [spec](064-reels-comments-share.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 7 — Search & Explore
 
@@ -252,6 +261,6 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | Push notifications (Expo Notifications + Edge Functions) | ☐ | |
 | Deep links (profile, post, reel, story) | ☐ | |
 | Realtime (DMs, typing, notifications, live comments) | ☐ | |
-| Media pipeline (compression, thumbnails, video) | ◐ | Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding. Phase 5: stories reuse it (photos 1080 px, Boomerang frames / photo stickers 720 px) |
+| Media pipeline (compression, thumbnails, video) | ◐ | Phase 6: reels are an edit list played live (clips as recorded + document), covers rendered 1080 px, voiceovers uploaded as recorded; no encoding. Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding. Phase 5: stories reuse it (photos 1080 px, Boomerang frames / photo stickers 720 px) |
 | Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides; Explore in Phase 7 |
 | Moderation & reporting backend | ◐ | Phase 4: `reports` table + report flow (stored only, reporter's feeds hide the post); no review tooling |

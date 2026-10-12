@@ -127,6 +127,9 @@ function RootNavigator() {
           name="story"
           options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
         />
+        {/* Phase 6 — Reels (pages 58–64; creation lives in compose/reel/*) */}
+        <Stack.Screen name="reel/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="saved/audio" />
         <Stack.Screen name="story-settings/index" />
         <Stack.Screen name="story-settings/hidden" />
         <Stack.Screen name="highlights/[id]/edit" />

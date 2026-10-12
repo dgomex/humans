@@ -38,16 +38,28 @@ export type Database = {
                   ]
                 },"audio_tracks": {
                   Row: {
-                    "artist": string,"audio_path": string,"cover_color": string,"created_at": string,"duration_ms": number,"id": string,"license": string,"source": string,"title": string
+                    "artist": string,"audio_path": string | null,"cover_color": string,"created_at": string,"duration_ms": number,"id": string,"license": string,"origin_post_id": string | null,"owner_id": string | null,"renamed_at": string | null,"source": string,"title": string
                   }
                   Insert: {
-                    "artist": string,"audio_path": string,"cover_color"?: string,"created_at"?: string,"duration_ms": number,"id"?: string,"license"?: string,"source"?: string,"title": string
+                    "artist": string,"audio_path"?: string | null,"cover_color"?: string,"created_at"?: string,"duration_ms": number,"id"?: string,"license"?: string,"origin_post_id"?: string | null,"owner_id"?: string | null,"renamed_at"?: string | null,"source"?: string,"title": string
                   }
                   Update: {
-                    "artist"?: string,"audio_path"?: string,"cover_color"?: string,"created_at"?: string,"duration_ms"?: number,"id"?: string,"license"?: string,"source"?: string,"title"?: string
+                    "artist"?: string,"audio_path"?: string | null,"cover_color"?: string,"created_at"?: string,"duration_ms"?: number,"id"?: string,"license"?: string,"origin_post_id"?: string | null,"owner_id"?: string | null,"renamed_at"?: string | null,"source"?: string,"title"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "audio_tracks_origin_post_id_fkey"
+      columns: ["origin_post_id"]
+isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audio_tracks_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"close_friends": {
                   Row: {
@@ -489,13 +501,13 @@ isOneToOne: false
                   ]
                 },"posts": {
                   Row: {
-                    "archived_at": string | null,"aspect_ratio": number,"audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"caption": string,"comment_count": number,"comments_disabled": boolean,"created_at": string,"edited_at": string | null,"hide_like_counts": boolean,"id": string,"like_count": number,"pinned_at": string | null,"published_at": string | null,"repost_count": number,"status": string,"updated_at": string
+                    "allow_download": boolean,"allow_remix": boolean,"archived_at": string | null,"aspect_ratio": number,"audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"caption": string,"comment_count": number,"comments_disabled": boolean,"cover_offset": number,"cover_path": string | null,"created_at": string,"edited_at": string | null,"hide_like_counts": boolean,"id": string,"kind": string,"like_count": number,"linked_reel_id": string | null,"pinned_at": string | null,"play_count": number,"published_at": string | null,"reel": Json | null,"remix_layout": string | null,"remix_of": string | null,"repost_count": number,"status": string,"updated_at": string
                   }
                   Insert: {
-                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"like_count"?: number,"pinned_at"?: string | null,"published_at"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
+                    "allow_download"?: boolean,"allow_remix"?: boolean,"archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"cover_offset"?: number,"cover_path"?: string | null,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"kind"?: string,"like_count"?: number,"linked_reel_id"?: string | null,"pinned_at"?: string | null,"play_count"?: number,"published_at"?: string | null,"reel"?: Json | null,"remix_layout"?: string | null,"remix_of"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"like_count"?: number,"pinned_at"?: string | null,"published_at"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
+                    "allow_download"?: boolean,"allow_remix"?: boolean,"archived_at"?: string | null,"aspect_ratio"?: number,"audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"caption"?: string,"comment_count"?: number,"comments_disabled"?: boolean,"cover_offset"?: number,"cover_path"?: string | null,"created_at"?: string,"edited_at"?: string | null,"hide_like_counts"?: boolean,"id"?: string,"kind"?: string,"like_count"?: number,"linked_reel_id"?: string | null,"pinned_at"?: string | null,"play_count"?: number,"published_at"?: string | null,"reel"?: Json | null,"remix_layout"?: string | null,"remix_of"?: string | null,"repost_count"?: number,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -509,6 +521,18 @@ isOneToOne: false
       columns: ["author_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "posts_linked_reel_id_fkey"
+      columns: ["linked_reel_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "posts_remix_of_fkey"
+      columns: ["remix_of"]
+isOneToOne: false
+      referencedRelation: "posts"
       referencedColumns: ["id"]
     }
                   ]
@@ -549,6 +573,31 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"reel_plays": {
+                  Row: {
+                    "first_played_at": string,"last_played_at": string,"plays": number,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "first_played_at"?: string,"last_played_at"?: string,"plays"?: number,"post_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "first_played_at"?: string,"last_played_at"?: string,"plays"?: number,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reel_plays_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reel_plays_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"reports": {
                   Row: {
@@ -969,6 +1018,14 @@ isOneToOne: false
 "approve_follow_request":
 { Args: { "requester": string }; Returns: boolean
                            },
+"audio_page":
+{ Args: { "p_track": string }; Returns: Json
+                           },
+"audio_reels":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_track": string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"id": string,"is_origin": boolean,"play_count": number
+            }[]
+                           },
 "auth_lookup":
 { Args: { "identifier": string }; Returns: {
               "email": string,"has_profile": boolean,"user_id": string,"username": string
@@ -1067,6 +1124,11 @@ isOneToOne: false
               "files": (string)[],"id": string
             }[]
                            },
+"my_reels":
+{ Args: { "p_limit"?: number }; Returns: {
+              "caption": string,"cover_offset": number,"cover_path": string,"id": string,"published_at": string
+            }[]
+                           },
 "people_picker":
 { Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"username": string
@@ -1097,7 +1159,7 @@ isOneToOne: false
                            },
 "profile_posts":
 { Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_user": string }; Returns: {
-              "archived_at": string,"audience": string,"author_id": string,"cover_path": string,"cover_type": string,"id": string,"is_pinned": boolean,"media_count": number,"published_at": string
+              "archived_at": string,"audience": string,"author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"is_pinned": boolean,"kind": string,"media_count": number,"play_count": number,"published_at": string
             }[]
                            },
 "publish_post":
@@ -1106,8 +1168,24 @@ isOneToOne: false
 "publish_story":
 { Args: { "p_story": string }; Returns: string
                            },
+"record_reel_play":
+{ Args: { "p_post": string }; Returns: undefined
+                           },
+"reel_remixes":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"id": string,"play_count": number
+            }[]
+                           },
+"reels_feed":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
+              "post_id": string,"reason": string,"score": number
+            }[]
+                           },
 "refresh_posts_count":
 { Args: { "p_user": string }; Returns: undefined
+                           },
+"rename_original_audio":
+{ Args: { "p_title": string,"p_track": string }; Returns: string
                            },
 "reorder_post_media":
 { Args: { "p_media": (string)[],"p_post": string }; Returns: undefined

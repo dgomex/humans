@@ -26,6 +26,10 @@ import { supabase } from '@/lib/supabase';
 
 import { deleteDrafts, draftKeys, saveDraft } from './drafts';
 import { extensionOf, keepFile, readJson, removeDir, writeJson } from './localFiles';
+import { clipEditOf } from '@/features/reels/source';
+import type { ReelDoc } from '@/features/reels/types';
+import type { Json } from '@/types/database';
+
 import { renderPhoto, videoContentType, videoExtension, videoPoster } from './media';
 import type { ComposerState, ComposerTag } from './types';
 
@@ -70,6 +74,11 @@ export type UploadJob = {
   mediaCreated: boolean;
   extrasCreated: boolean;
   slides: UploadSlide[];
+  /** Reels: cover image and voiceover files (besides the clips). */
+  extras?: UploadFile[];
+  /** Reels: the edit document with media ids, built in prepare. */
+  reelDoc?: ReelDoc | null;
+  coverPath?: string | null;
   /** What the user shared (kept to "Save draft" a failed post). */
   composer: ComposerState;
 };
@@ -90,6 +99,16 @@ const RETRY_DELAYS = [3_000, 10_000, 30_000, 60_000];
 const DONE_VISIBLE_MS = 3_000;
 
 const isDuplicate = (e: { code?: string } | null) => e?.code === '23505';
+
+/** Voiceover recordings by file extension. */
+const AUDIO_TYPES: Record<string, string> = {
+  m4a: 'audio/mp4',
+  mp4: 'audio/mp4',
+  aac: 'audio/aac',
+  mp3: 'audio/mpeg',
+  webm: 'audio/webm',
+  wav: 'audio/wav',
+};
 
 function looksOffline(message: string) {
   return /network|fetch|timed? ?out|offline|connection|socket|unreachable/i.test(message);
@@ -141,7 +160,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     for (const item of composer.items) {
       const mediaId = Crypto.randomUUID();
       if (item.type === 'image') {
-        const out = await renderPhoto(item, composer.ratio);
+        const out = await renderPhoto(item, composer.reel ? 9 / 16 : composer.ratio);
         const localUri = await keepFile(out.uri, dir, `${mediaId}.jpg`);
         slides.push({
           mediaId,
@@ -191,12 +210,67 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       }
     }
     const cover = slides[0];
-    return {
-      ...job,
-      slides,
-      prepared: true,
-      coverUri: cover ? (cover.thumb?.localUri ?? cover.file.localUri) : job.coverUri,
-    };
+    const reel = composer.reel;
+    const extras: UploadFile[] = [];
+    let reelDoc: ReelDoc | null = null;
+    let coverPath: string | null = null;
+    let coverUri = cover ? (cover.thumb?.localUri ?? cover.file.localUri) : job.coverUri;
+    if (reel) {
+      // Reel: cover still, voiceovers, and the edit document keyed by media id.
+      if (reel.cover) {
+        const out = await renderPhoto(
+          {
+            key: 'cover',
+            uri: reel.cover.uri,
+            type: 'image',
+            width: reel.cover.width,
+            height: reel.cover.height,
+            crop: null,
+            altText: '',
+            tags: [],
+          },
+          9 / 16,
+        );
+        const localUri = await keepFile(out.uri, dir, 'cover.jpg');
+        coverPath = storagePaths.postMedia(job.userId, job.postId, 'cover', 'jpg');
+        coverUri = localUri;
+        extras.push({ localUri, contentType: 'image/jpeg', path: coverPath, uploaded: false });
+      } else if (cover) {
+        // No cover chosen: the first clip's poster (or photo) is the cover.
+        coverPath = cover.thumb?.path ?? cover.file.path;
+      }
+      const voiceovers = [];
+      for (const v of reel.voiceovers) {
+        const ext = extensionOf(v.uri, 'm4a');
+        const path = storagePaths.postMedia(job.userId, job.postId, 'vo-' + v.id, ext);
+        extras.push({
+          localUri: v.uri,
+          contentType: AUDIO_TYPES[ext] ?? 'audio/mp4',
+          path,
+          uploaded: false,
+        });
+        voiceovers.push({ id: v.id, path, at_ms: v.atMs, duration_ms: v.durationMs });
+      }
+      reelDoc = {
+        v: 1,
+        clips: composer.items.map((item, i) => {
+          const e = clipEditOf(composer, item);
+          return {
+            media_id: slides[i].mediaId,
+            in_ms: Math.round(e.inMs),
+            out_ms: Math.round(e.outMs),
+            speed: e.speed,
+          };
+        }),
+        volumes: reel.volumes,
+        voiceovers,
+        overlays: reel.overlays,
+        remix: reel.remix
+          ? { in_ms: reel.remix.in_ms, out_ms: reel.remix.out_ms, pip: reel.remix.pip }
+          : undefined,
+      };
+    }
+    return { ...job, slides, extras, reelDoc, coverPath, prepared: true, coverUri };
   }, []);
 
   const runJob = useCallback(
@@ -214,23 +288,42 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       }
 
       const c = job.composer;
+      const reel = c.reel ?? null;
+      // Reels (and, like Instagram, single-video posts) are kind 'reel'.
+      const kind = reel || (c.items.length === 1 && c.items[0].type === 'video') ? 'reel' : 'post';
       if (!job.postCreated) {
         const { error } = await supabase.from('posts').insert({
           id: job.postId,
+          kind,
           caption: c.caption.trim(),
-          aspect_ratio: Math.round(c.ratio * 10000) / 10000,
+          aspect_ratio: reel ? 0.5625 : Math.round(c.ratio * 10000) / 10000,
           audience: c.audience,
           hide_like_counts: c.hideLikeCounts,
           comments_disabled: c.commentsDisabled,
-          audio_track_id: c.music?.trackId ?? null,
+          audio_track_id: c.music?.trackId ?? reel?.borrowedAudio?.trackId ?? null,
           audio_start_ms: c.music?.startMs ?? 0,
+          ...(reel
+            ? {
+                reel: job.reelDoc as unknown as Json,
+                cover_path: job.coverPath ?? null,
+                cover_offset: reel.coverOffset,
+                allow_remix: reel.allowRemix,
+                allow_download: reel.allowDownload,
+                remix_of: reel.remix?.postId ?? null,
+                remix_layout: reel.remix?.layout ?? null,
+                linked_reel_id: reel.linkedReel?.id ?? null,
+              }
+            : {}),
         });
         if (error && !isDuplicate(error)) throw error;
         set({ postCreated: true });
       }
 
       // Byte-weighted progress across all files (5% prepare … 95% uploaded … 100% published).
-      const files = job.slides.flatMap((s) => (s.thumb ? [s.file, s.thumb] : [s.file]));
+      const files = [
+        ...job.slides.flatMap((s) => (s.thumb ? [s.file, s.thumb] : [s.file])),
+        ...(job.extras ?? []),
+      ];
       const sizes = files.map((f) => Math.max(1, localFileSize(f.localUri)));
       const total = sizes.reduce((a, b) => a + b, 0);
       let done = files.reduce((sum, f, i) => sum + (f.uploaded ? sizes[i] : 0), 0);
@@ -247,7 +340,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         });
         f.uploaded = true;
         done += sizes[i];
-        set({ slides: [...job.slides], progress: 0.05 + 0.9 * (done / total) });
+        set({
+          slides: [...job.slides],
+          extras: job.extras ? [...job.extras] : undefined,
+          progress: 0.05 + 0.9 * (done / total),
+        });
       }
 
       if (!job.mediaCreated) {
@@ -296,11 +393,25 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.rpc('publish_post', { p_post: job.postId });
       if (error) throw error;
 
+      // Name the reel's original audio ("Rename audio" on page 61). Not fatal.
+      const title = reel?.audioTitle.trim();
+      if (reel && title && !c.music && !reel.borrowedAudio) {
+        const { data: track } = await supabase
+          .from('audio_tracks')
+          .select('id')
+          .eq('origin_post_id', job.postId)
+          .maybeSingle();
+        if (track) {
+          await supabase.rpc('rename_original_audio', { p_track: track.id, p_title: title });
+        }
+      }
+
       set({ stage: 'done', progress: 1 });
       if (Platform.OS !== 'web')
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void qc.invalidateQueries({ queryKey: ['profile'] });
       void qc.invalidateQueries({ queryKey: ['posts'] });
+      void qc.invalidateQueries({ queryKey: ['reels'] });
       if (c.draftId) {
         // Posting a draft removes it, like Instagram.
         await deleteDrafts(job.userId, [c.draftId]).catch(() => {});
@@ -411,6 +522,25 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         const ext = extensionOf(item.uri, item.type === 'video' ? 'mp4' : 'jpg');
         items.push({ ...item, uri: await keepFile(item.uri, dir, `source-${i}.${ext}`) });
       }
+      let reel = state.reel ?? null;
+      if (reel) {
+        const voiceovers = [];
+        for (const [i, v] of reel.voiceovers.entries()) {
+          const ext = extensionOf(v.uri, 'm4a');
+          voiceovers.push({ ...v, uri: await keepFile(v.uri, dir, 'vo-source-' + i + '.' + ext) });
+        }
+        const cover = reel.cover
+          ? {
+              ...reel.cover,
+              uri: await keepFile(
+                reel.cover.uri,
+                dir,
+                'cover-source.' + extensionOf(reel.cover.uri, 'jpg'),
+              ),
+            }
+          : null;
+        reel = { ...reel, voiceovers, cover };
+      }
       const job: UploadJob = {
         postId,
         userId,
@@ -426,7 +556,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         mediaCreated: false,
         extrasCreated: false,
         slides: [],
-        composer: { ...state, items },
+        composer: { ...state, items, reel },
       };
       commit([job, ...jobsRef.current]);
       void pump();
@@ -448,8 +578,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       if (!job) return;
       removeJob(postId);
       if (job.postCreated) await supabase.from('posts').delete().eq('id', postId);
-      const uploaded = job.slides
-        .flatMap((s) => (s.thumb ? [s.file, s.thumb] : [s.file]))
+      const uploaded = [
+        ...job.slides.flatMap((s) => (s.thumb ? [s.file, s.thumb] : [s.file])),
+        ...(job.extras ?? []),
+      ]
         .filter((f) => f.uploaded)
         .map((f) => f.path);
       await removeFiles(BUCKETS.posts, uploaded).catch(() => {});

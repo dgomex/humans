@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query';
 
 import { invalidatePosts } from '@/features/posts/api';
+import type { ReelDoc, RemixLayout } from '@/features/reels/types';
 import { BUCKETS, getPublicUrl, getSignedUrls, SIGNED_URL_TTL } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/database';
@@ -40,6 +41,19 @@ export type CardTag = {
   user: { id: string; username: string };
 };
 
+export type CardAudio = {
+  id: string;
+  title: string;
+  artist: string;
+  /** null for original audio (the sound of its reel). */
+  audio_path: string | null;
+  duration_ms: number;
+  source: string;
+  origin_post_id: string | null;
+  cover_color: string;
+  owner: { id: string; username: string; avatar_path: string | null } | null;
+};
+
 export type FeedPost = {
   id: string;
   author_id: string;
@@ -50,6 +64,22 @@ export type FeedPost = {
     avatar_path: string | null;
     is_private: boolean;
   };
+  /** Phase 6: reels are posts with kind 'reel' (single-video posts too). */
+  kind: 'post' | 'reel';
+  reel: ReelDoc | null;
+  cover_path: string | null;
+  cover_offset: number;
+  coverUrl: string | null;
+  /** Signed voiceover URLs by storage path. */
+  voiceoverUrls: Record<string, string>;
+  /** null when the author hid like / view counts. */
+  play_count: number | null;
+  allow_remix: boolean;
+  allow_download: boolean;
+  can_remix: boolean;
+  remix: { layout: RemixLayout; post_id: string | null; username: string | null } | null;
+  remix_count: number;
+  linked_reel_id: string | null;
   caption: string;
   aspect_ratio: number;
   audience: 'everyone' | 'close_friends';
@@ -60,13 +90,7 @@ export type FeedPost = {
   published_at: string | null;
   edited_at: string | null;
   audio_start_ms: number;
-  audio: {
-    id: string;
-    title: string;
-    artist: string;
-    audio_path: string;
-    duration_ms: number;
-  } | null;
+  audio: CardAudio | null;
   audioUrl: string | null;
   media: CardMedia[];
   tags: CardTag[];
@@ -129,15 +153,25 @@ export async function fetchCards(qc: QueryClient, ids: string[]): Promise<FeedPo
   if (ids.length === 0) return [];
   const { data, error } = await supabase.rpc('post_cards', { p_ids: ids });
   if (error) throw error;
-  const raw = (data ?? []) as unknown as Omit<FeedPost, 'audioUrl'>[];
-  const paths = raw.flatMap((p) =>
-    p.media.flatMap((m) => (m.thumb_path ? [m.path, m.thumb_path] : [m.path])),
-  );
+  const raw = (data ?? []) as unknown as Omit<
+    FeedPost,
+    'audioUrl' | 'coverUrl' | 'voiceoverUrls'
+  >[];
+  const paths = raw.flatMap((p) => [
+    ...p.media.flatMap((m) => (m.thumb_path ? [m.path, m.thumb_path] : [m.path])),
+    ...(p.cover_path ? [p.cover_path] : []),
+    ...(p.reel?.voiceovers ?? []).map((v) => v.path),
+  ]);
   const urls = await getSignedUrls(BUCKETS.posts, paths);
-  const cards = raw.map((p) => ({
+  const cards: FeedPost[] = raw.map((p) => ({
     ...p,
     aspect_ratio: Number(p.aspect_ratio),
-    audioUrl: p.audio ? getPublicUrl(BUCKETS.audio, p.audio.audio_path) : null,
+    cover_offset: Number(p.cover_offset ?? 0.5),
+    audioUrl: p.audio?.audio_path ? getPublicUrl(BUCKETS.audio, p.audio.audio_path) : null,
+    coverUrl: p.cover_path ? (urls[p.cover_path] ?? null) : null,
+    voiceoverUrls: Object.fromEntries(
+      (p.reel?.voiceovers ?? []).flatMap((v) => (urls[v.path] ? [[v.path, urls[v.path]]] : [])),
+    ),
     media: p.media.map((m) => ({
       ...m,
       url: urls[m.path] ?? null,
@@ -692,7 +726,7 @@ export function useLikers(target: LikersTarget, search: string) {
 // Reports (page 50)
 // ---------------------------------------------------------------------------------------------
 
-export type ReportTarget = 'post' | 'comment' | 'profile' | 'story';
+export type ReportTarget = 'post' | 'comment' | 'profile' | 'story' | 'audio';
 export type ReportReason = Database['public']['Tables']['reports']['Insert']['reason'];
 
 export function useReport() {

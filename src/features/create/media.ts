@@ -43,9 +43,10 @@ export function assetToItem(asset: ImagePicker.ImagePickerAsset): ComposerItem {
 
 /**
  * Page 32 (decision: OS picker). Ordered multi-select of photos and videos up to `limit`.
- * Returns [] when cancelled; drops videos longer than 60 s (reported via `tooLong`).
+ * Returns [] when cancelled; drops videos longer than `maxVideoMs` (60 s for posts, 3 min for
+ * reel clips), reported via `tooLong`.
  */
-export async function pickFromLibrary(limit = MAX_ITEMS) {
+export async function pickFromLibrary(limit = MAX_ITEMS, maxVideoMs = MAX_VIDEO_MS) {
   if (Platform.OS !== 'web') {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) throw new PickerPermissionError('library');
@@ -56,11 +57,11 @@ export async function pickFromLibrary(limit = MAX_ITEMS) {
     selectionLimit: limit,
     orderedSelection: true,
     quality: 1,
-    videoMaxDuration: MAX_VIDEO_MS / 1000,
+    videoMaxDuration: maxVideoMs / 1000,
   });
   if (result.canceled) return { items: [] as ComposerItem[], tooLong: 0 };
   const items = result.assets.map(assetToItem);
-  const ok = items.filter((i) => i.type !== 'video' || (i.durationMs ?? 0) <= MAX_VIDEO_MS + 500);
+  const ok = items.filter((i) => i.type !== 'video' || (i.durationMs ?? 0) <= maxVideoMs + 500);
   return { items: ok.slice(0, limit), tooLong: items.length - ok.length };
 }
 

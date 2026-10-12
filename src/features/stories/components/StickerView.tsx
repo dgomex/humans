@@ -698,9 +698,15 @@ function PostSticker({
   const card = usePostCard(postId);
   const post = card.data;
   const first = post?.media[0];
-  const uri = first ? (first.type === 'video' ? first.thumbUrl : first.url) : null;
+  // Reels show their cover (Phase 6), 9:16 like Instagram's reel sticker.
+  const uri =
+    post?.coverUrl ?? (first ? (first.type === 'video' ? first.thumbUrl : first.url) : null);
   const w = 600;
-  const h = post ? w / Math.max(0.75, Math.min(1.91, post.aspect_ratio)) : w;
+  const h = post
+    ? post.kind === 'reel'
+      ? (w * 16) / 9
+      : w / Math.max(0.75, Math.min(1.91, post.aspect_ratio))
+    : w;
   return (
     <Tap
       onPress={onPress && post ? () => onPress(postId) : undefined}

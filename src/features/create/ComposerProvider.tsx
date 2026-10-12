@@ -9,7 +9,12 @@ import {
 } from 'react';
 
 import { clampRatio, originalRatio } from './media';
+import { MAX_REEL_CLIPS } from '@/features/reels/types';
+
 import { emptyComposer, MAX_ITEMS, type ComposerItem, type ComposerState } from './types';
+
+/** Posts take 20 items; reels up to 50 clips. */
+const limitOf = (s: ComposerState) => (s.reel ? MAX_REEL_CLIPS : MAX_ITEMS);
 
 type ComposerContextValue = {
   state: ComposerState;
@@ -25,6 +30,8 @@ type ComposerContextValue = {
   /** ⤢: toggle between 1:1 and the first item's original ratio. Resets crops. */
   toggleRatio: () => void;
   update: (patch: Partial<ComposerState>) => void;
+  /** Patch computed from the latest state (reel edits made in quick succession). */
+  updateWith: (fn: (s: ComposerState) => Partial<ComposerState>) => void;
   /** True once the user has something worth saving as a draft. */
   dirty: boolean;
   /** Call before closing the flow on purpose (shared / saved) so the "Save draft?" guard stays quiet. */
@@ -51,14 +58,14 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
   const setItems = useCallback((items: ComposerItem[]) => {
     setState((s) => ({
       ...s,
-      items: items.slice(0, MAX_ITEMS),
+      items: items.slice(0, limitOf(s)),
       // Instagram opens the first photo square; ⤢ switches to its original shape.
       ratio: 1,
     }));
   }, []);
 
   const appendItems = useCallback((items: ComposerItem[]) => {
-    setState((s) => ({ ...s, items: [...s.items, ...items].slice(0, MAX_ITEMS) }));
+    setState((s) => ({ ...s, items: [...s.items, ...items].slice(0, limitOf(s)) }));
   }, []);
 
   const updateItem = useCallback((key: string, patch: Partial<ComposerItem>) => {
@@ -102,6 +109,10 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, ...patch }));
   }, []);
 
+  const updateWith = useCallback((fn: (s: ComposerState) => Partial<ComposerState>) => {
+    setState((s) => ({ ...s, ...fn(s) }));
+  }, []);
+
   const value = useMemo<ComposerContextValue>(
     () => ({
       state,
@@ -113,6 +124,7 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
       moveItem,
       toggleRatio,
       update,
+      updateWith,
       dirty: state.items.length > 0,
       allowExit,
       isExitAllowed,
@@ -127,6 +139,7 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
       moveItem,
       toggleRatio,
       update,
+      updateWith,
       allowExit,
       isExitAllowed,
     ],

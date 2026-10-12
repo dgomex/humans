@@ -1,16 +1,16 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, ScrollView, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text } from '@/components';
+import { Icon, Text } from '@/components';
 import { TopBar, TopBarButton } from '@/features/profile/components/TopBar';
 import { ALL_POSTS, useCollections } from '@/features/saved/api';
 import { CollectionTile } from '@/features/saved/CollectionTile';
 import { useTheme } from '@/theme';
 
-/** Page 026 — Saved: All posts + your collections (private to you). */
+/** Page 026 — Saved: All posts, Audio (Phase 6) + your collections (private to you). */
 export default function SavedScreen() {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, radius } = useTheme();
   const { width } = useWindowDimensions();
   const collections = useCollections();
   const tile = (width - spacing.lg * 2 - spacing.md) / 2;
@@ -37,6 +37,26 @@ export default function SavedScreen() {
             width={tile}
             onPress={() => open(ALL_POSTS)}
           />
+          <Pressable
+            onPress={() => router.push('/saved/audio')}
+            accessibilityRole="button"
+            accessibilityLabel="Saved audio"
+            style={{ width: tile, gap: spacing.xs }}
+          >
+            <View
+              style={{
+                width: tile,
+                height: tile,
+                borderRadius: radius.md,
+                backgroundColor: colors.backgroundSecondary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="music" size={48} color={colors.textSecondary} />
+            </View>
+            <Text variant="bodyBold">Audio</Text>
+          </Pressable>
           {(collections.data ?? []).map((c) => (
             <CollectionTile
               key={c.id}

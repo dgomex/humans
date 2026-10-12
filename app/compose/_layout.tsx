@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 
 import { ComposerProvider } from '@/features/create/ComposerProvider';
 
-/** Phase 3 creation flow (pages 32–42): one composer shared by every step. */
+/** Creation flow (posts: pages 32–42, reels: 59–63): one composer shared by every step. */
 export default function ComposeLayout() {
   return (
     <ComposerProvider>
@@ -17,6 +17,13 @@ export default function ComposeLayout() {
         <Stack.Screen name="advanced" />
         <Stack.Screen name="alt-text" />
         <Stack.Screen name="drafts" />
+        {/* Phase 6 — reels (pages 59–63) share the composer */}
+        <Stack.Screen name="reel/camera" options={{ animation: 'fade' }} />
+        <Stack.Screen name="reel/edit" />
+        <Stack.Screen name="reel/timeline" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="reel/voiceover" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="reel/details" />
+        <Stack.Screen name="reel/cover" options={{ presentation: 'modal' }} />
       </Stack>
     </ComposerProvider>
   );

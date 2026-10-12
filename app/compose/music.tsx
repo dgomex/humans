@@ -8,7 +8,11 @@ export default function MusicScreen() {
   return (
     <MusicPicker
       onDone={(music) => {
-        composer.update({ music });
+        // A catalog track replaces someone's original audio on a reel.
+        composer.updateWith((s) => ({
+          music,
+          reel: s.reel ? { ...s.reel, borrowedAudio: null } : s.reel,
+        }));
         goBack('/compose');
       }}
       onClose={() => goBack('/compose')}

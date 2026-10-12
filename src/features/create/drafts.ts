@@ -19,7 +19,11 @@ export const draftKeys = { list: (userId: string) => ['drafts', userId] as const
 export async function listDrafts(userId: string): Promise<Draft[]> {
   const drafts = await readJson<Draft[]>(root(userId), INDEX, []);
   // Hide drafts whose media vanished (e.g. app data partly cleared).
-  return drafts.filter((d) => d.state.items.every((i) => fileExists(i.uri)));
+  return drafts.filter(
+    (d) =>
+      d.state.items.every((i) => fileExists(i.uri)) &&
+      (d.state.reel?.voiceovers ?? []).every((v) => fileExists(v.uri)),
+  );
 }
 
 export async function saveDraft(userId: string, state: ComposerState): Promise<Draft> {
@@ -34,10 +38,34 @@ export async function saveDraft(userId: string, state: ComposerState): Promise<D
       : await keepFile(item.uri, folder, name);
     items.push({ ...item, uri });
   }
+  // Reels also keep their voiceover takes and cover still.
+  const inDraft = (uri: string) => uri.includes(`/drafts/${userId}/${id}/`);
+  let reel = state.reel ?? null;
+  if (reel) {
+    const voiceovers = [];
+    for (const v of reel.voiceovers) {
+      const uri = inDraft(v.uri)
+        ? v.uri
+        : await keepFile(v.uri, folder, `vo-${v.id}.${extensionOf(v.uri, 'm4a')}`);
+      voiceovers.push({ ...v, uri });
+    }
+    const cover =
+      reel.cover && !inDraft(reel.cover.uri)
+        ? {
+            ...reel.cover,
+            uri: await keepFile(
+              reel.cover.uri,
+              folder,
+              `cover-${Crypto.randomUUID()}.${extensionOf(reel.cover.uri, 'jpg')}`,
+            ),
+          }
+        : reel.cover;
+    reel = { ...reel, voiceovers, cover };
+  }
   const draft: Draft = {
     id,
     savedAt: new Date().toISOString(),
-    state: { ...state, items, draftId: id },
+    state: { ...state, items, reel, draftId: id },
   };
   const all = (await readJson<Draft[]>(root(userId), INDEX, [])).filter((d) => d.id !== id);
   writeJson(root(userId), INDEX, [draft, ...all]);

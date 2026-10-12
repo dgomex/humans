@@ -24,6 +24,8 @@ import { useTheme } from '@/theme';
 
 import { usePostCard, useToggleLike, type FeedPost, type FeedReason } from '../api';
 import { timeAgo } from '../format';
+import { FeedReel } from '@/features/reels/components/FeedReel';
+
 import { PostMedia } from './PostMedia';
 import { usePostSheets } from './PostSheets';
 
@@ -152,6 +154,19 @@ function PostCardBody({
             <Text variant="caption" color="textSecondary">
               Suggested for you
             </Text>
+          ) : post.audio && post.kind === 'reel' ? (
+            <Pressable
+              onPress={() =>
+                router.push({ pathname: '/audio/[id]', params: { id: post.audio!.id } })
+              }
+              style={[styles.row, { gap: 4 }]}
+              accessibilityRole="button"
+            >
+              <Icon name="music" size={12} />
+              <Text variant="caption" numberOfLines={1}>
+                {post.audio.artist} · {post.audio.title}
+              </Text>
+            </Pressable>
           ) : post.audio ? (
             <MusicLine post={post} />
           ) : null}
@@ -170,13 +185,17 @@ function PostCardBody({
         </Pressable>
       </View>
 
-      <PostMedia
-        media={post.media}
-        tags={post.tags}
-        ratio={post.aspect_ratio}
-        active={active}
-        onDoubleTap={() => setLiked(true)}
-      />
+      {post.kind === 'reel' ? (
+        <FeedReel post={post} active={active} onDoubleTap={() => setLiked(true)} />
+      ) : (
+        <PostMedia
+          media={post.media}
+          tags={post.tags}
+          ratio={post.aspect_ratio}
+          active={active}
+          onDoubleTap={() => setLiked(true)}
+        />
+      )}
 
       {/* Actions */}
       <View style={[styles.actions, { paddingHorizontal: spacing.md, paddingTop: spacing.sm }]}>

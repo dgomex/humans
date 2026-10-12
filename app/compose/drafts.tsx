@@ -80,7 +80,7 @@ export default function DraftsScreen() {
                     setSelected((s) => (on ? s.filter((x) => x !== d.id) : [...s, d.id]));
                   } else {
                     composer.reset(d.state);
-                    router.replace('/compose/edit');
+                    router.replace(d.state.reel ? '/compose/reel/edit' : '/compose/edit');
                   }
                 }}
                 accessibilityRole="button"

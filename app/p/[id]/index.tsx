@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,14 +71,12 @@ function Scroller({
 
   const entries = useMemo<FeedEntry[]>(() => {
     if (index === -1) return [];
-    return ids
-      .slice(showEarlier ? 0 : index)
-      .map((postId) => ({
-        type: 'post' as const,
-        key: postId,
-        postId,
-        reason: 'following' as const,
-      }));
+    return ids.slice(showEarlier ? 0 : index).map((postId) => ({
+      type: 'post' as const,
+      key: postId,
+      postId,
+      reason: 'following' as const,
+    }));
   }, [ids, index, showEarlier]);
 
   // Not in the grid any more (deleted / archived meanwhile): fall back to the single post.
@@ -117,6 +115,7 @@ function Scroller({
 
 function SinglePost({ id }: { id: string }) {
   const { colors, spacing } = useTheme();
+  const { profile } = useAuth();
   const card = usePostCard(id);
   const post = card.data;
 
@@ -140,6 +139,12 @@ function SinglePost({ id }: { id: string }) {
       </SafeAreaView>
     );
   }
+  // A link to a reel opens the Reels viewer (page 58); archived reels and collab invites stay here.
+  const invited = post.collaborators.some(
+    (c) => c.user_id === profile?.id && c.status === 'pending',
+  );
+  if (post.kind === 'reel' && !post.archived_at && !invited)
+    return <Redirect href={{ pathname: '/reel/[id]', params: { id } }} />;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>

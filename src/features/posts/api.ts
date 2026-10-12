@@ -13,7 +13,7 @@ import type { Database } from '@/types/database';
 type Fn = Database['public']['Functions'];
 
 export type GridPost = Fn['profile_posts']['Returns'][number] & { coverUrl: string | null };
-export type GridKind = 'grid' | 'tagged' | 'archived' | 'reposts';
+export type GridKind = 'grid' | 'reels' | 'tagged' | 'archived' | 'reposts';
 export type SearchedProfile = Fn['search_profiles']['Returns'][number];
 export type CollabInvite = Fn['my_collab_invites']['Returns'][number] & { coverUrl: string | null };
 export type AudioTrack = Database['public']['Tables']['audio_tracks']['Row'];
@@ -103,7 +103,7 @@ async function fetchPost(id: string) {
       url: urls[m.path] ?? null,
       thumbUrl: m.thumb_path ? (urls[m.thumb_path] ?? null) : null,
     })),
-    audioUrl: data.audio ? getPublicUrl(BUCKETS.audio, data.audio.audio_path) : null,
+    audioUrl: data.audio?.audio_path ? getPublicUrl(BUCKETS.audio, data.audio.audio_path) : null,
   };
 }
 
@@ -126,6 +126,9 @@ export type PostFlags = {
   pinned_at?: string | null;
   hide_like_counts?: boolean;
   comments_disabled?: boolean;
+  /** Reels (Phase 6). */
+  allow_remix?: boolean;
+  allow_download?: boolean;
 };
 
 export function useUpdatePostFlags(id: string) {
@@ -330,7 +333,7 @@ export function useHashtagSuggestions(prefix: string, enabled = true) {
 // ---------------------------------------------------------------------------------------------
 
 export const trackUrl = (t: Pick<AudioTrack, 'audio_path'>) =>
-  getPublicUrl(BUCKETS.audio, t.audio_path);
+  t.audio_path ? getPublicUrl(BUCKETS.audio, t.audio_path) : '';
 
 export function useAudioTracks(query: string, savedOnly: boolean) {
   return useQuery({
@@ -338,7 +341,12 @@ export function useAudioTracks(query: string, savedOnly: boolean) {
     queryFn: async () => {
       const [tracks, saved] = await Promise.all([
         (() => {
-          let q = supabase.from('audio_tracks').select('*').order('title');
+          // The picker lists the catalog; original audio is used from its audio page (page 62).
+          let q = supabase
+            .from('audio_tracks')
+            .select('*')
+            .neq('source', 'original')
+            .order('title');
           const term = query.trim().replace(/[%_,()]/g, '');
           if (term) q = q.or(`title.ilike.%${term}%,artist.ilike.%${term}%`);
           return q;
@@ -349,7 +357,7 @@ export function useAudioTracks(query: string, savedOnly: boolean) {
       if (saved.error) throw saved.error;
       const savedIds = new Set(saved.data.map((s) => s.track_id));
       return tracks.data
-        .map((t) => ({ ...t, saved: savedIds.has(t.id) }))
+        .map((t) => ({ ...t, audio_path: t.audio_path ?? '', saved: savedIds.has(t.id) }))
         .filter((t) => !savedOnly || t.saved);
     },
   });

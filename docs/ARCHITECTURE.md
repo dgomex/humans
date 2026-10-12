@@ -37,7 +37,14 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   story-settings/{index,hidden}       # page 55 story settings + Hide story from (page 97 links here later)
   collab-invites          # STUB until Activity (page 71): collaboration invites
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
-  reel/[id].tsx, direct/…   # future
+  reel/[id]               # page 58: one reel (link → then suggested reels) or a scroller (?source=profile|audio|remixes&owner=)
+  (home,explore,reels,profile)/audio/[id]    # page 62 audio page (shared, keeps the tab bar)
+  (home,explore,reels,profile)/remixes/[id]  # page 63 "View remixes"
+  (reels)/reels           # page 58 Reels tab (vertical pager)
+  compose/reel/           # Phase 6 creation (same compose Stack + ComposerProvider, `state.reel`): camera (59 + remix 63),
+                          # edit (60 tools), timeline (60 Edit video), voiceover, details (61), cover (61)
+  saved/audio             # page 26 → Audio tile (saved sounds)
+  direct/…                # future
 src/
   components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text, TextField, UserRow, ActionRow/ActionGroup (sheet menus), SearchField (barrel: @/components)
   features/<area>/        # per-area logic: api.ts (Supabase queries), hooks.ts, components/
@@ -57,6 +64,12 @@ src/
                           # hides, impressions, comments, likers, reports), format.ts (timeAgo, shortAge, postUrl, shared mute),
                           # components/ (PostCard, PostMedia, ZoomOverlay + ZoomProvider, FeedList, PostSheets + PostSheetsProvider
                           # = share / ⋯ options / collections / why / repost note, CommentComposer)
+  features/reels/         # Phase 6: types.ts (ReelDoc v1 edit list: clips / trims / speed, volumes, voiceovers, timed overlays,
+                          # remix trims), source.ts (card or composer → segments timeline), api.ts (reels_feed, scrollers,
+                          # useReelSource incl. remix original + borrowed original audio, plays, audio page, remixes, saved audio),
+                          # composer.ts (reel actions on the shared composer), format.ts (reel links, session mute / speed),
+                          # components/ (ReelPlayer = live edit-list player with 2 alternating video players + music + voiceovers +
+                          # overlays + remix layouts, ReelView, ReelPager, FeedReel, ReelGrid, ReelSheets, RangeSlider, VolumeSlider)
   features/stories/       # Phase 5: types.ts (content doc v1, 1080×1920 canvas), style.ts (story palette, fonts), api.ts (tray, rings,
                           # reels / story_cards + signed URLs, views, likes, replies, sticker answers, viewers, archive, highlights,
                           # settings, hide list), StoryComposer (flow state), StoryUploads (persisted upload queue), viewerQueue,
@@ -82,6 +95,8 @@ scripts/
   seed-audio.mjs          # synthesize + upload the placeholder music catalog (re-run after db reset)
   seed-feed.mjs           # demo graph for the feed: dev.viewer + 4 accounts, generated photos, likes, comments, a repost
   seed-stories.mjs        # demo stories (run after seed-feed): stickers, CF story, views / likes / replies, archive + highlight
+  seed-reels.mjs          # demo reels (run after seed-feed): photo-clip reels with music, timed text, speed, remixes, a linked reel
+  test-reels-rls.mjs      # Phase 6 reels / plays / original audio / remix / linked reel / feed RLS check (four fresh users)
   test-stories-rls.mjs    # Phase 5 stories / stickers / views / replies / settings / highlights RLS check (four fresh users)
   lib/seed.mjs            # shared seed helpers (PNG encoder, get-or-create accounts)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
@@ -144,7 +159,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 |---|---|---|---|
 | `avatars` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write/select via API; anyone reads by public URL |
 | `posts` | bucket (private, 100 MB, image+video) | Phase 0 | Owner write. Viewer select `posts_select_viewer` (Phase 3) = `can_view_post_object(name)` |
-| `reels` | bucket (private, 100 MB, video+cover image) | Phase 0 | Owner-only. **Phase 6 adds** viewer select policy |
+| `reels` | bucket (private, 100 MB, video+cover image) | Phase 0 | **Unused**: reels are posts, so their files live in the `posts` bucket (Phase 6 decision) |
 | `stories` | bucket (private, 50 MB, image+video) | Phase 0 | Owner write. Viewer select `stories_select_viewer` (Phase 5) = `can_view_story_object(name)` |
 | `messages` | bucket (private, 50 MB, image/video/audio/gif) | Phase 0 | **No policies = deny all.** Phase 9 adds thread-participant policies (path `{thread_id}/…`) |
 | `highlights-covers` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write |
@@ -225,3 +240,15 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `save_highlight(id, title, cover, ids[])`, `profile_highlights(user)`, `story_archive(...)`, `my_purgeable_stories()` | RPCs (invoker) | Phase 5 (pages 25/28/57) | Create / update a highlight in one call; highlights with ≥1 visible item; own archive; expired unarchived stories + abandoned uploads (client deletes files + rows on launch) |
 | `reports` target_type `story` | constraint + trigger update | Phase 5 | Story must be visible, not your own |
 | `is_valid_username` reserved list | function update | Phase 5 | + story |
+| `posts` (Phase 6 columns) | columns | Phase 6 (pages 58–64) | `kind` post/reel (single-video posts are reels), `reel` jsonb edit document (<64 KB), `cover_path` (own folder), `cover_offset` (3:4 grid window), trigger-free `play_count` (via `record_reel_play`), `allow_remix`, `allow_download` (updatable), `remix_of` (→ posts, set null on delete) + `remix_layout` side_by_side/react/sequence, `linked_reel_id` (own published reel). Reels 0.5…1.91 aspect. Insert trigger `posts_before_insert` checks cover path, remix permission (public, Everyone, allow_remix, visible; own always), linked reel |
+| `post_media` limits | constraint + trigger update | Phase 6 | positions 0–49 (reels ≤ 50 clips, posts ≤ 20); clips ≤ 180.5 s (posts' videos stay ≤ 60.5 s) |
+| `publish_post` | function update | Phase 6 | + reel document checks (clips = own media, trims, speed 0.25–4, total ≤ 3 min), cover + voiceover files present (voiceovers in the post folder), creates **original audio** for reels with a video clip and no music |
+| `posts` bucket MIME | bucket update | Phase 6 | + audio types (voiceovers) |
+| `audio_tracks` (Phase 6 columns) | columns + policy | Phase 6 (page 62) | `source = 'original'` rows: `owner_id`, `origin_post_id` (unique, cascade), no `audio_path`, `renamed_at`. Select: catalog, own, or `can_view_post(origin)`. `saved_audio` insert needs a visible track. `rename_original_audio(track, title)` owner only, 1–60 chars |
+| `reel_plays` | table | Phase 6 (page 58) | (user_id, post_id) plays, first/last played. Owner select only; writes only via `record_reel_play` (definer: visible, not own, repeat after 5 s, also marks `post_seen`) |
+| `post_cards` | function update | Phase 6 | + kind, reel, cover, play_count (masked with hidden counts), allow_remix / allow_download / can_remix, remix {layout, post_id, username}, remix_count, linked_reel_id (if visible), audio source / origin / owner |
+| `reels_feed(snapshot, offset, limit)` | RPC (invoker) | Phase 6 (page 58) | Followed (any visible) + public reels; engagement × recency, Favorites / following boost, own fresh reel first, seen (plays / impressions) × 0.1, Not interested authors × 0.2 |
+| `profile_posts` | function replaced | Phase 6 | + kind `reels`; returns kind, play_count (masked), cover_offset; reel cover first. `saved_posts` uses reel covers |
+| `audio_page(track)`, `audio_reels(track, …)`, `reel_remixes(post, …)`, `my_reels(limit)` | RPCs (invoker) | Phase 6 (pages 61–63) | Audio page header (reel count, saved, owner), grid (original first, then popular), remixes, own reels to link |
+| `reports` target_type `audio` | constraint + trigger update | Phase 6 | Visible track, not your own |
+| `is_valid_username` reserved list | function update | Phase 6 | + audio, reel-create |
