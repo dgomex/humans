@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, Text } from '@/components';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useAccountSwitcher } from '@/features/auth/components/AccountSwitcher';
-import { useFollowRequests, useProfile } from '@/features/profile/api';
+import { useFollowRequestSummary } from '@/features/activity/api';
+import { useProfile } from '@/features/profile/api';
 import { CreateSheet, OwnMenuSheet } from '@/features/profile/components/ProfileSheets';
 import { ProfileView } from '@/features/profile/components/ProfileView';
 import { TopBar, TopBarButton } from '@/features/profile/components/TopBar';
@@ -18,7 +19,7 @@ export default function OwnProfileScreen() {
   const switcher = useAccountSwitcher();
   const me = auth.session?.user.id;
   const profile = useProfile({ userId: me });
-  const requests = useFollowRequests(me);
+  const requests = useFollowRequestSummary(!!me);
   const [sheet, setSheet] = useState<'create' | 'menu' | null>(null);
   const data = profile.data;
   const username = data?.username ?? auth.profile?.username ?? '';
@@ -50,7 +51,7 @@ export default function OwnProfileScreen() {
                 label="Settings and activity"
                 onPress={() => setSheet('menu')}
               />
-              {(requests.data?.length ?? 0) > 0 ? (
+              {(requests.data?.total ?? 0) > 0 ? (
                 <View
                   style={{
                     position: 'absolute',
@@ -91,7 +92,7 @@ export default function OwnProfileScreen() {
       <OwnMenuSheet
         visible={sheet === 'menu'}
         onClose={() => setSheet(null)}
-        requestCount={requests.data?.length ?? 0}
+        requestCount={requests.data?.total ?? 0}
       />
     </SafeAreaView>
   );

@@ -20,6 +20,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { Avatar, BottomSheet, Icon, Text, UserRow, useToast, type IconName } from '@/components';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { openHashtag } from '@/features/explore/format';
 import { usePostCard, useToggleLike, type FeedPost } from '@/features/feed/api';
 import { usePostSheets } from '@/features/feed/components/PostSheets';
 import { FollowButton } from '@/features/follows/FollowButton';
@@ -232,7 +233,7 @@ function ReelBody({
               progress={progress}
               stickerActions={{
                 onMention: (u) => openProfile(u),
-                onHashtag: () => toast.show('Hashtag pages are coming soon'),
+                onHashtag: (tag) => openHashtag(tag),
                 onLink: () => toast.show('Links open in the browser in a later update'),
               }}
             />
@@ -361,7 +362,7 @@ function ReelBody({
                         onPress={() =>
                           part.startsWith('@')
                             ? openProfile(part.slice(1).toLowerCase())
-                            : toast.show('Hashtag pages are coming soon')
+                            : openHashtag(part.slice(1))
                         }
                       >
                         {part}

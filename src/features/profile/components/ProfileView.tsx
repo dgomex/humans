@@ -32,6 +32,8 @@ import { ringOf, useStoryRing } from '@/features/stories/api';
 import { setStoryQueue } from '@/features/stories/viewerQueue';
 import { FollowingSheet, LinksSheet } from './ProfileSheets';
 import { PROFILE_TABS, ProfileTabBar, ProfileTabPages, type ProfileTabKey } from './ProfileTabs';
+import { RequestBanner } from '@/features/activity/components/RequestBanner';
+
 import { SuggestedStrip } from './SuggestedStrip';
 
 const AVATAR = 86;
@@ -90,6 +92,9 @@ export function ProfileView({
       <View style={{ paddingBottom: spacing.md }}>
         <Identity profile={profile} />
         <Bio profile={profile} />
+        {isOwn ? null : (
+          <RequestBanner userId={profile.id} username={profile.username} onAnswered={onRefresh} />
+        )}
         <Actions
           profile={profile}
           suggestionsOn={showSuggestions}

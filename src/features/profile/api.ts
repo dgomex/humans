@@ -35,7 +35,6 @@ export const profileKeys = {
   highlights: (userId: string) => ['profile', 'highlights', userId] as const,
   picker: (search: string) => ['profile', 'picker', search] as const,
   bell: (targetId: string) => ['profile', 'bell', targetId] as const,
-  followRequests: ['profile', 'followRequests'] as const,
 };
 
 export function parseLinks(links: Json | null | undefined): ProfileLink[] {
@@ -298,55 +297,5 @@ export function useSetBellPref(me: string | undefined, targetId: string) {
       }));
     },
     onSettled: () => qc.invalidateQueries({ queryKey: profileKeys.bell(targetId) }),
-  });
-}
-
-// ---------------------------------------------------------------------------------------------
-// Follow requests — minimal stub for private accounts (page 72 owns the real screen, Phase 8)
-// ---------------------------------------------------------------------------------------------
-
-export function useFollowRequests(me: string | undefined, enabled = true) {
-  return useQuery({
-    queryKey: profileKeys.followRequests,
-    enabled: !!me && enabled,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('follow_requests')
-        .select(
-          'created_at, requester:profiles!follow_requests_requester_id_fkey(id, username, full_name, avatar_path)',
-        )
-        .eq('target_id', me!)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.flatMap((r) => (r.requester ? [r.requester] : []));
-    },
-  });
-}
-
-export function useAnswerFollowRequest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      me,
-      requesterId,
-      approve,
-    }: {
-      me: string;
-      requesterId: string;
-      approve: boolean;
-    }) => {
-      if (approve) {
-        const { error } = await supabase.rpc('approve_follow_request', { requester: requesterId });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('follow_requests')
-          .delete()
-          .eq('requester_id', requesterId)
-          .eq('target_id', me);
-        if (error) throw error;
-      }
-    },
-    onSettled: () => invalidateProfiles(qc),
   });
 }

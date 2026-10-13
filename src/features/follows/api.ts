@@ -8,7 +8,10 @@ export type SuggestedAccount = {
   full_name: string;
   avatar_path: string | null;
   is_private: boolean;
-  reason: 'contact' | 'popular';
+  reason: 'follows_you' | 'contact' | 'mutual' | 'new' | 'popular';
+  follows_me: boolean;
+  mutual_count: number;
+  mutual_username: string | null;
 };
 
 export const followKeys = {
@@ -20,7 +23,10 @@ export function useSuggestedAccounts(enabled = true) {
     queryKey: followKeys.suggestions,
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('suggested_accounts', { max_count: 30 });
+      const { data, error } = await supabase.rpc('suggested_accounts', {
+        max_count: 30,
+        p_offset: 0,
+      });
       if (error) throw error;
       return (data ?? []) as SuggestedAccount[];
     },

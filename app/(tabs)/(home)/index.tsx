@@ -8,6 +8,7 @@ import { Button, Icon, Text, UserRow, useToast } from '@/components';
 import { UploadBanner } from '@/features/create/components/UploadBanner';
 import { feedKeys, useHomeFeed } from '@/features/feed/api';
 import { FeedList } from '@/features/feed/components/FeedList';
+import { ActivityHeart } from '@/features/activity/components/ActivityHeart';
 import { useSuggestedAccounts } from '@/features/follows/api';
 import { storyKeys } from '@/features/stories/api';
 import { StoriesTray } from '@/features/stories/components/StoriesTray';
@@ -106,14 +107,7 @@ function HomeHeader() {
         <Icon name="down" size={18} />
       </Pressable>
       <View style={[styles.row, { gap: spacing.xl }]}>
-        <Pressable
-          onPress={() => toast.show('Notifications are coming soon')}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Notifications"
-        >
-          <Icon name="heart" size={26} />
-        </Pressable>
+        <ActivityHeart />
         <Pressable
           onPress={() => toast.show('Messages are coming soon')}
           hitSlop={10}

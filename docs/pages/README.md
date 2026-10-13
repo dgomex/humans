@@ -41,7 +41,17 @@ Single source of truth for progress. Update after **every** workflow step.
 - Demo data: `node scripts/seed-reels.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`). Seeded reels are photo clips (no video encoder on the dev machine).
 - **Still to verify on a real phone (Expo Go):** recording segments (tap / hold, speed, timer, Align), video clip playback + cuts between clips (two alternating players), music / borrowed audio in sync, voiceover recording, timeline trim / split, cover frame grab, upload + publish of a recorded reel, remix recording side by side / react, Download to photos, swipe paging feel, hold-to-pause / edge 2×, scrubber.
 
-Next: Phase 7 — Search & Explore (`/start-phase 7`): needs Phase 3 (posts, hashtags stub) and Phase 4 (post views), both done; Explore can now include reels.
+**Phase 7 — Search & Explore:** built 2026-10-12 (pages 65–68, 70; 69 Place page dropped by decision). Decisions: 65, 66, 67, 70 Full clone; 68 Changes (no hashtag following); 69 dropped (no place data source, like page 38).
+- Verified: `node scripts/test-explore-rls.mjs` (61 checks: Explore visibility (private / Close Friends / own excluded), stable snapshot paging, anon blocked, similar posts ranking + exclusions, hashtag page normalising / count / cover / Top · Recent · Reels incl. approved-follower private posts, account / tag / audio / caption search incl. private original audio, Not interested excluded everywhere, recent searches (de-dup, bump, validation, RPC-only writes, owner-only read / delete, 50 cap, clear), hashtag reports, reserved route names), Phase 2–6 scripts still pass, DB lint clean, typecheck + lint clean. Clicked through on web (phone viewport, dark + light): Explore grid with alternating tall reel tiles + badges, Search typeahead (keyword, #sunset, account with "Following"), results tabs, For you tile → Explore scroller ("sunset · Posts"), caption #sunset → hashtag page (count, cover, Top grid, Reels tab with play counts), recent searches + See all + Clear all.
+- Demo data: same seeds as Phase 6 (`seed-audio`, `seed-feed`, `seed-stories`, `seed-reels`); seeded captions use #sunset / #travel / #weekend / #reels. RLS test runs leave posts with tiny placeholder images that show as grey tiles in Explore on the local stack.
+- **Still to verify on a real phone (Expo Go):** long-press preview with drag-to-action + haptics, tall-tile muted autoplay of real videos, swipe between search result tabs, keyboard behaviour on the search field, pull to refresh reshuffle.
+
+**Phase 8 — Notifications / Activity:** built 2026-10-13 (pages 71–73). Decisions: 71, 72, 73 Full clone; **no OS push yet** (in-app alerts only: ♡ dot + bubble, Realtime top banner; push tokens / fan-out / permission prompt move to page 100).
+- Verified: `node scripts/test-activity-rls.mjs` (77 checks: every notification type incl. grouping, retractions (unlike / unfollow / untag / decline / caption edit / undo repost / deleted comment or post), self-actions ignored, collaborators get likes, bell posts + stories, invisible targets hidden, story mentions / Add yours / ended countdowns, follow requests summary + list + search + privacy + approve → follow_accepted, seen state + New / Today sections + paging, badge counts, delete own only, no client insert / update, anon blocked, suggestions ranking reasons + dismissals + paging, reserved names), Phase 0–7 scripts still pass, DB lint clean, typecheck + lint clean. Clicked through on web (phone viewport, dark + light): Home ♡ dot + bubble → Notifications (New / Yesterday / Last 7 days / Last 30 days, grouped likes + follows, collab Accept, comment ♡, Follow back, Suggested for you + ✕), live banner when another account likes a post, ☰ menu entries, Discover people, as `cam.private`: Follow requests row → Confirm → Follow back, profile "wants to follow you" banner → Delete.
+- Demo data: `node scripts/seed-activity.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`); log in as `dev.viewer` (Activity) or `cam.private` (follow requests).
+- **Still to verify on a real phone (Expo Go):** long-press → Delete notification sheet + haptics, banner over native screens, Reply → comments sheet with "@user " prefilled and keyboard, Connect contacts card (permission + sync), pull to refresh.
+
+Next: Phase 9 — Direct Messages (`/start-phase 9`): needs Phase 2 (follows) and Phase 4 (sharing posts), both done; it also picks up stored stubs (story replies in `story_replies`, "Send to friends" on posts / reels / stories, profile Message buttons, Home ✈ icon) and can reuse Phase 8's Realtime pattern + notifications table for message requests.
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -51,28 +61,31 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | `follows` table (follower/following, select-all, insert/delete own) + `useFollow`, `FollowButton` | 011 | 2 — Profile | **Resolved** in Phase 2 (privacy-aware RLS, requests, counters). Notifications still Phase 8 |
 | Own-profile placeholder (username ▾ switcher, temporary Log out) | 015 | 2 — Profile (page 16) / 11 — Settings (log out) | **Resolved** by page 16; Log out moved to the ☰ menu stub below |
 | ☰ "Settings and activity" sheet (Saved, Close Friends, Favorites, Follow requests, QR, Log out) | 016 | 11 — Settings (page 86) | Stub: replace with the real Settings hub |
-| `app/follow-requests.tsx` (Confirm / Delete) + `useFollowRequests` | 018 | 8 — Notifications (page 72) | Stub: move into Activity |
+| `app/follow-requests.tsx` (Confirm / Delete) + `useFollowRequests` | 018 | 8 — Notifications (page 72) | **Resolved** in Phase 8 (`app/activity/requests.tsx`, stub removed) |
 | Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
 | Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
 | Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | **Resolved** in Phase 5 (editor, `highlight_items`, viewer) |
 | `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | **Resolved**: FK in Phase 3; `saves`, bookmark and real Saved grids in Phase 4 |
 | Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | **Resolved** by page 44 (own-post menu and "Remove me from post" now live in the shared ⋯ options sheet) |
-| Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | Stub: wire to Activity and Inbox |
+| Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | ♡ **resolved** in Phase 8; Direct still a Phase 9 stub |
 | Stories tray shows only your own "Your story" circle (toast) | 043 | 5 — Stories (52/53) | **Resolved** in Phase 5 (real tray, rings, upload progress) |
 | Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | "Add to story" **resolved** (post sticker); "Send to friends" still a Phase 9 stub |
 | "Mute <user>" (hidden-post panel, report follow-ups), Restrict, Block | 049/050 | 11 — Settings (92–94) | Stub: "coming soon" until `mutes` / `blocks` / `restricts` exist; feeds must then exclude them |
 | Report status / support requests (reports are stored only) | 050 | 11 — Settings (108) | Stub: no moderation UI |
-| `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | Stub: move into Activity |
-| `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | Stub: hashtag pages + search in Phase 7 |
+| `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | **Resolved** in Phase 8 (inline in Activity; stub screen + ☰ entry removed; `my_collab_invites` RPC unused) |
+| `hashtags` / `post_hashtags` (caption-parsed, counts) | 036 | 7 — Explore (pages 66/68) | **Done** in Phase 7 (hashtag page, search, reports) |
 | ☰ menu gains "Archive" (posts + stories archive, page 28) | 041 | 11 — Settings (page 86) / 10 (live archive) | Part of the ☰ stub; stories archive added in Phase 5 |
 | Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Audio page built in Phase 6; catalog still generated placeholders — replace with real CC0/licensed tracks |
-| Remix / reel mention notifications (stored, not sent) | 063 | 8 — Notifications (71) | Stub: notify creators of remixes / uses of their audio |
+| Remix / reel mention notifications (stored, not sent) | 063 | 8 — Notifications (71) | **Resolved** in Phase 8 (remix + audio-use notifications) |
 | Reel share "Send to friends" (DM grid) | 064 | 9 — Direct (76/77) | Stub (same as page 48) |
 | Global "Allow remixing" default | 061/063 | 11 — Settings (page 99) | Per-reel toggle only; page 99 adds the account default |
 | Hashtag taps in reel captions / stickers ("coming soon") | 058 | 7 — Explore (68) | Stub |
 | Story replies / quick reactions stored in `story_replies`; story ✈ share, "Send", viewer-row ✈ and share-screen "Send to chats" show "coming soon" | 052/055/056 | 9 — Direct (76) | Stub: move replies into DM threads, wire sending |
-| Story countdown reminders + mentions stored without notifications | 054 | 8 — Notifications (71) | Stub: notify mentioned users and reminder holders |
+| Story countdown reminders + mentions stored without notifications | 054 | 8 — Notifications (71) | **Resolved** in Phase 8 (countdowns materialize when the badge is fetched — no server cron yet) |
 | Story ⋯ "Mute" ("coming soon"); hashtag sticker tap ("coming soon") | 052 | 11 — Settings (94) / 7 — Explore (68) | Stub |
+| OS push notifications (tokens, Edge Function fan-out, permission prompt at the end of sign-up) | 071 | 11 — Settings (page 100) | Deferred by decision: in-app alerts only |
+| "Turn off notifications like this" (row menu) and per-category notification prefs | 071 | 11 — Settings (page 100) | Not built; Activity shows every type |
+| Notifications ignore blocks / mutes / restricts | 071 | 11 — Settings (92–94) | Filter actors in `visible_notifications` once those tables exist |
 | Story settings screen lives at `app/story-settings` | 055 | 11 — Settings (page 97) | Page 97 links to it |
 
 ## Phase 0 — Foundation
@@ -186,20 +199,20 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 65 | Explore grid | — | ☐ | — | ☐ | ☐ |
-| 66 | Search results (top, accounts, audio, tags, places) | — | ☐ | — | ☐ | ☐ |
-| 67 | Recent searches | — | ☐ | — | ☐ | ☐ |
-| 68 | Hashtag page | — | ☐ | — | ☐ | ☐ |
-| 69 | Location / Place page | — | ☐ | — | ☐ | ☐ |
-| 70 | Explore post scroller (post opened from Explore) | — | ☐ | — | ☐ | ☐ |
+| 65 | Explore grid | [spec](065-explore-grid.md) | ☑ | Full clone | ☑ | ◐ |
+| 66 | Search results (top, accounts, audio, tags, places) | [spec](066-search-results.md) | ☑ | Full clone | ☑ | ◐ |
+| 67 | Recent searches | [spec](067-recent-searches.md) | ☑ | Full clone | ☑ | ◐ |
+| 68 | Hashtag page | [spec](068-hashtag-page.md) | ☑ | Changes | ☑ | ◐ |
+| 69 | Location / Place page | [spec](069-place-page.md) | ☑ | Dropped | — | — |
+| 70 | Explore post scroller (post opened from Explore) | [spec](070-explore-post-scroller.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 8 — Notifications / Activity
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 71 | Notifications (Activity) feed | — | ☐ | — | ☐ | ☐ |
-| 72 | Follow requests (private accounts) | — | ☐ | — | ☐ | ☐ |
-| 73 | Suggested for you / Discover people | — | ☐ | — | ☐ | ☐ |
+| 71 | Notifications (Activity) feed | [spec](071-activity-feed.md) | ☑ | Full clone | ☑ | ◐ |
+| 72 | Follow requests (private accounts) | [spec](072-follow-requests.md) | ☑ | Full clone | ☑ | ◐ |
+| 73 | Suggested for you / Discover people | [spec](073-discover-people.md) | ☑ | Full clone | ☑ | ◐ |
 
 ## Phase 9 — Direct Messages
 
@@ -258,9 +271,9 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | Item | Status | Notes |
 |---|---|---|
-| Push notifications (Expo Notifications + Edge Functions) | ☐ | |
+| Push notifications (Expo Notifications + Edge Functions) | ☐ | Deferred to page 100 by the Phase 8 decision; Activity uses in-app alerts |
 | Deep links (profile, post, reel, story) | ☐ | |
-| Realtime (DMs, typing, notifications, live comments) | ☐ | |
+| Realtime (DMs, typing, notifications, live comments) | ◐ | Phase 8: `notifications` + `follow_requests` postgres_changes → ♡ badge + in-app banner (`ActivityAlerts`) |
 | Media pipeline (compression, thumbnails, video) | ◐ | Phase 6: reels are an edit list played live (clips as recorded + document), covers rendered 1080 px, voiceovers uploaded as recorded; no encoding. Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding. Phase 5: stories reuse it (photos 1080 px, Boomerang frames / photo stickers 720 px) |
-| Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides; Explore in Phase 7 |
+| Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides. Phase 7: `explore_grid` (engagement × interest affinity from hashtags / authors / follows-of-follows) and `similar_posts`; all SQL, no ML |
 | Moderation & reporting backend | ◐ | Phase 4: `reports` table + report flow (stored only, reporter's feeds hide the post); no review tooling |

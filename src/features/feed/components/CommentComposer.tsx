@@ -40,15 +40,20 @@ export const CommentComposer = forwardRef<
     onCancelReply: () => void;
     onSubmit: (text: string) => void;
     autoFocus?: boolean;
+    /** Prefilled text (e.g. "@user " when opened to reply from Activity). */
+    initialText?: string;
   }
 >(function CommentComposer(
-  { avatarPath, authorUsername, replyingTo, onCancelReply, onSubmit, autoFocus },
+  { avatarPath, authorUsername, replyingTo, onCancelReply, onSubmit, autoFocus, initialText },
   ref,
 ) {
   const { colors, spacing, radius, hairline } = useTheme();
   const input = useRef<TextInput>(null);
-  const [text, setText] = useState('');
-  const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [text, setText] = useState(initialText ?? '');
+  const [selection, setSelection] = useState(() => {
+    const end = initialText?.length ?? 0;
+    return { start: end, end };
+  });
   const [forced, setForced] = useState<{ start: number; end: number } | undefined>();
 
   useImperativeHandle(ref, () => ({

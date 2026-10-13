@@ -301,8 +301,8 @@ export function CreateSheet({ visible, onClose }: SheetProps) {
 }
 
 /**
- * ☰ on the own profile. STUB of "Settings and activity" (page 86, Phase 11): only the Phase 2–3
- * destinations (incl. Archive and collaboration invites) + temporary Log out.
+ * ☰ on the own profile. STUB of "Settings and activity" (page 86, Phase 11): only the Phase 2–8
+ * destinations (Archive, Notifications, Follow requests, Discover people) + temporary Log out.
  */
 export function OwnMenuSheet({
   visible,
@@ -317,8 +317,9 @@ export function OwnMenuSheet({
       | '/archive'
       | '/close-friends'
       | '/favorites'
-      | '/follow-requests'
-      | '/collab-invites'
+      | '/activity'
+      | '/activity/requests'
+      | '/discover-people'
       | '/qr',
   ) => after(onClose, () => router.push(path));
   const username = auth.profile?.username ?? '';
@@ -329,10 +330,11 @@ export function OwnMenuSheet({
       <ActionRow icon="archive" label="Archive" onPress={go('/archive')} />
       <ActionRow icon="closeFriends" label="Close Friends" onPress={go('/close-friends')} />
       <ActionRow icon="starOutline" label="Favorites" onPress={go('/favorites')} />
+      <ActionRow icon="heart" label="Notifications" onPress={go('/activity')} />
       <ActionRow
         icon="personAdd"
         label="Follow requests"
-        onPress={go('/follow-requests')}
+        onPress={go('/activity/requests')}
         trailing={
           requestCount > 0 ? (
             <View
@@ -353,7 +355,7 @@ export function OwnMenuSheet({
           ) : null
         }
       />
-      <ActionRow icon="collab" label="Collaboration invites" onPress={go('/collab-invites')} />
+      <ActionRow icon="contacts" label="Discover people" onPress={go('/discover-people')} />
       <ActionRow icon="qr" label="QR code" onPress={go('/qr')} />
       <ActionRow
         icon="logout"

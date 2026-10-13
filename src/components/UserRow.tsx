@@ -35,7 +35,8 @@ export function UserRow({
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
+      // A trailing control (Follow, Remove…) is its own button; web forbids nested <button>s.
+      accessibilityRole={onPress && !trailing ? 'button' : undefined}
       style={({ pressed }) => [
         styles.row,
         {

@@ -36,6 +36,25 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"activity_state": {
+                  Row: {
+                    "seen_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "seen_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "seen_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "activity_state_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"audio_tracks": {
                   Row: {
                     "artist": string,"audio_path": string | null,"cover_color": string,"created_at": string,"duration_ms": number,"id": string,"license": string,"origin_post_id": string | null,"owner_id": string | null,"renamed_at": string | null,"source": string,"title": string
@@ -315,6 +334,55 @@ isOneToOne: false
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "actor_id": string,"audio_id": string | null,"comment_id": string | null,"created_at": string,"data": NonNullable<Json>,"id": string,"post_id": string | null,"recipient_id": string,"story_id": string | null,"type": string
+                  }
+                  Insert: {
+                    "actor_id": string,"audio_id"?: string | null,"comment_id"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: string,"post_id"?: string | null,"recipient_id": string,"story_id"?: string | null,"type": string
+                  }
+                  Update: {
+                    "actor_id"?: string,"audio_id"?: string | null,"comment_id"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: string,"post_id"?: string | null,"recipient_id"?: string,"story_id"?: string | null,"type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_audio_id_fkey"
+      columns: ["audio_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_comment_id_fkey"
+      columns: ["comment_id"]
+isOneToOne: false
+      referencedRelation: "comments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
       referencedColumns: ["id"]
     }
                   ]
@@ -743,6 +811,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"search_history": {
+                  Row: {
+                    "id": string,"kind": string,"query": string | null,"searched_at": string,"target_id": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "id"?: string,"kind": string,"query"?: string | null,"searched_at"?: string,"target_id"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "id"?: string,"kind"?: string,"query"?: string | null,"searched_at"?: string,"target_id"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "search_history_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"stories": {
                   Row: {
                     "audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"content": NonNullable<Json>,"created_at": string,"duration_ms": number | null,"files": (string)[],"height": number | null,"id": string,"keep_in_archive": boolean,"kind": string,"like_count": number,"media_path": string | null,"published_at": string | null,"reply_count": number,"reshared_post_id": string | null,"status": string,"thumb_path": string | null,"view_count": number,"width": number | null
@@ -980,6 +1067,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"suggestion_dismissals": {
+                  Row: {
+                    "created_at": string,"target_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"target_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"target_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suggestion_dismissals_target_id_fkey"
+      columns: ["target_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "suggestion_dismissals_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"username_changes": {
                   Row: {
                     "changed_at": string,"id": string,"new_username": string,"old_username": string,"user_id": string
@@ -1008,6 +1120,16 @@ isOneToOne: false
             "account_about":
 { Args: { "p_user_id": string }; Returns: {
               "avatar_path": string,"date_joined": string,"former_usernames_count": number,"id": string,"username": string
+            }[]
+                           },
+"activity_badge":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "comments": number,"follows": number,"likes": number,"pending_requests": number,"requests": number,"unseen": number
+            }[]
+                           },
+"activity_feed":
+{ Args: { "p_before": string,"p_limit"?: number,"p_offset"?: number,"p_seen": string,"p_tz"?: string }; Returns: {
+              "actor_count": number,"actor_follow": Json,"actors": Json,"audio": Json,"collab_status": string,"comment": Json,"data": Json,"group_key": string,"ids": (string)[],"latest_at": string,"post": Json,"section": string,"story": Json,"type": string
             }[]
                            },
 "add_yours_chain":
@@ -1072,6 +1194,16 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"explore_grid":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number,"score": number
+            }[]
+                           },
+"follow_request_summary":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "latest": Json,"total": number
+            }[]
+                           },
 "follow_user":
 { Args: { "target": string }; Returns: string
                            },
@@ -1083,6 +1215,16 @@ isOneToOne: false
 "get_profile":
 { Args: { "p_user_id"?: string,"p_username"?: string }; Returns: {
               "avatar_path": string,"bio": string,"can_view": boolean,"created_at": string,"followers_count": number,"following_count": number,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"is_private": boolean,"is_self": boolean,"links": Json,"mutual_count": number,"mutual_preview": Json,"posts_count": number,"requested": boolean,"username": string
+            }[]
+                           },
+"hashtag_page":
+{ Args: { "p_name": string }; Returns: {
+              "cover_path": string,"cover_post_id": string,"id": string,"name": string,"post_count": number
+            }[]
+                           },
+"hashtag_posts":
+{ Args: { "p_limit"?: number,"p_name": string,"p_offset"?: number,"p_tab"?: string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number
             }[]
                            },
 "highlight_reel":
@@ -1108,6 +1250,9 @@ isOneToOne: false
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
                            },
+"mark_activity_seen":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "mark_posts_seen":
 { Args: { "p_ids": (string)[] }; Returns: undefined
                            },
@@ -1117,6 +1262,11 @@ isOneToOne: false
 "my_collab_invites":
 { Args: Record<PropertyKey, never>; Returns: {
               "author_avatar_path": string,"author_id": string,"author_username": string,"cover_path": string,"invited_at": string,"post_id": string
+            }[]
+                           },
+"my_follow_requests":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_search"?: string }; Returns: {
+              "avatar_path": string,"created_at": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"requested": boolean,"username": string
             }[]
                            },
 "my_purgeable_stories":
@@ -1129,10 +1279,24 @@ isOneToOne: false
               "caption": string,"cover_offset": number,"cover_path": string,"id": string,"published_at": string
             }[]
                            },
+"normalize_hashtag":
+{ Args: { "p_name": string }; Returns: string
+                           },
+"notification_preview":
+{ Args: { "p_id": string }; Returns: {
+              "actor_avatar_path": string,"actor_username": string,"comment_body": string,"data": Json,"id": string,"post_id": string,"post_kind": string,"story_id": string,"type": string
+            }[]
+                           },
+"notify":
+{ Args: { "p_actor": string,"p_at"?: string,"p_audio"?: string,"p_comment"?: string,"p_data"?: Json,"p_post"?: string,"p_recipient": string,"p_story"?: string,"p_type": string }; Returns: undefined
+                           },
 "people_picker":
 { Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"username": string
             }[]
+                           },
+"post_base_score":
+{ Args: { "p_comments": number,"p_likes": number,"p_now": string,"p_plays": number,"p_published_at": string,"p_reposts": number }; Returns: number
                            },
 "post_cards":
 { Args: { "p_ids": (string)[] }; Returns: Json[]
@@ -1145,6 +1309,14 @@ isOneToOne: false
 "post_likers":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string,"p_search"?: string }; Returns: {
               "avatar_path": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"requested": boolean,"username": string
+            }[]
+                           },
+"post_owners":
+{ Args: { "p_post": string }; Returns: string[]
+                           },
+"post_tile":
+{ Args: { "p_id": string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number
             }[]
                            },
 "profile_connections":
@@ -1168,8 +1340,16 @@ isOneToOne: false
 "publish_story":
 { Args: { "p_story": string }; Returns: string
                            },
+"recent_searches":
+{ Args: { "p_limit"?: number }; Returns: {
+              "audio_artist": string,"audio_cover_color": string,"audio_owner_avatar_path": string,"audio_source": string,"audio_title": string,"avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"kind": string,"post_count": number,"query": string,"searched_at": string,"tag_name": string,"target_id": string,"username": string
+            }[]
+                           },
 "record_reel_play":
 { Args: { "p_post": string }; Returns: undefined
+                           },
+"record_search":
+{ Args: { "p_kind": string,"p_query"?: string,"p_target"?: string }; Returns: undefined
                            },
 "reel_remixes":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string }; Returns: {
@@ -1201,6 +1381,26 @@ isOneToOne: false
               "author_id": string,"cover_path": string,"cover_type": string,"id": string,"media_count": number,"saved_at": string
             }[]
                            },
+"search_accounts":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
+              "avatar_path": string,"followed_by": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"mutual_count": number,"requested": boolean,"username": string
+            }[]
+                           },
+"search_audio":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
+              "artist": string,"audio_path": string,"cover_color": string,"duration_ms": number,"id": string,"owner_avatar_path": string,"owner_username": string,"reel_count": number,"source": string,"title": string
+            }[]
+                           },
+"search_hashtags":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
+              "id": string,"name": string,"post_count": number
+            }[]
+                           },
+"search_posts":
+{ Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_query": string }; Returns: {
+              "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number
+            }[]
+                           },
 "search_profiles":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"username": string
@@ -1211,6 +1411,11 @@ isOneToOne: false
                            },
 "set_comment_pinned":
 { Args: { "p_comment": string,"p_pinned": boolean }; Returns: undefined
+                           },
+"similar_posts":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string,"p_snapshot"?: string }; Returns: {
+              "post_id": string,"score": number,"similarity": number
+            }[]
                            },
 "stories_tray":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -1259,14 +1464,17 @@ isOneToOne: false
 { Args: { "full_name": string,"max_count"?: number }; Returns: (string)[]
                            },
 "suggested_accounts":
-{ Args: { "max_count"?: number }; Returns: {
-              "avatar_path": string,"full_name": string,"id": string,"is_private": boolean,"reason": string,"username": string
+{ Args: { "max_count"?: number,"p_offset"?: number }; Returns: {
+              "avatar_path": string,"follows_me": boolean,"full_name": string,"id": string,"is_private": boolean,"mutual_count": number,"mutual_username": string,"reason": string,"username": string
             }[]
                            },
 "suggested_posts":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
               "post_id": string,"score": number
             }[]
+                           },
+"sync_countdown_notifications":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "sync_post_caption_refs":
 { Args: { "p_caption": string,"p_post": string }; Returns: undefined
@@ -1276,7 +1484,26 @@ isOneToOne: false
                            },
 "username_available":
 { Args: { "name": string }; Returns: boolean
-                           }
+                           },
+"visible_notifications":
+{ Args: { "p_before"?: string }; Returns: {
+              "actor_id": string,
+"audio_id": string | null,
+"comment_id": string | null,
+"created_at": string,
+"data": NonNullable<Json>,
+"id": string,
+"post_id": string | null,
+"recipient_id": string,
+"story_id": string | null,
+"type": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "notifications"
+        isOneToOne: false
+        isSetofReturn: true
+      } }
           }
           Enums: {
             [_ in never]: never

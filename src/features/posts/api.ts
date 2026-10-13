@@ -15,7 +15,6 @@ type Fn = Database['public']['Functions'];
 export type GridPost = Fn['profile_posts']['Returns'][number] & { coverUrl: string | null };
 export type GridKind = 'grid' | 'reels' | 'tagged' | 'archived' | 'reposts';
 export type SearchedProfile = Fn['search_profiles']['Returns'][number];
-export type CollabInvite = Fn['my_collab_invites']['Returns'][number] & { coverUrl: string | null };
 export type AudioTrack = Database['public']['Tables']['audio_tracks']['Row'];
 
 const PAGE = 30;
@@ -26,7 +25,6 @@ export const postKeys = {
   all: ['posts'] as const,
   grid: (userId: string, kind: GridKind) => ['posts', 'grid', userId, kind] as const,
   detail: (id: string) => ['posts', 'detail', id] as const,
-  invites: ['posts', 'invites'] as const,
   search: (q: string) => ['posts', 'search-profiles', q] as const,
   hashtags: (q: string) => ['posts', 'hashtags', q] as const,
   tracks: (q: string, saved: boolean) => ['posts', 'tracks', q, saved] as const,
@@ -257,24 +255,6 @@ export function useRemoveMyTag(postId: string, userId: string | undefined) {
 // ---------------------------------------------------------------------------------------------
 // Collaborators
 // ---------------------------------------------------------------------------------------------
-
-export function useCollabInvites() {
-  return useQuery({
-    queryKey: postKeys.invites,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('my_collab_invites');
-      if (error) throw error;
-      const urls = await getSignedUrls(
-        BUCKETS.posts,
-        data.map((d) => d.cover_path).filter((p): p is string => !!p),
-      );
-      return data.map((d) => ({
-        ...d,
-        coverUrl: d.cover_path ? (urls[d.cover_path] ?? null) : null,
-      }));
-    },
-  });
-}
 
 export function useRespondCollab() {
   const qc = useQueryClient();

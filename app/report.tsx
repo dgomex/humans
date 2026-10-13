@@ -14,6 +14,7 @@ import {
   type ReportReason,
   type ReportTarget,
 } from '@/features/feed/api';
+import { removeFromExplore } from '@/features/explore/api';
 import { useFollowAction } from '@/features/profile/api';
 import { TopBar } from '@/features/profile/components/TopBar';
 import { goBack } from '@/lib/navigation';
@@ -102,7 +103,11 @@ export default function ReportScreen() {
 function Report() {
   const { type, id } = useLocalSearchParams<{ type: ReportTarget; id: string }>();
   const target: ReportTarget =
-    type === 'comment' || type === 'profile' || type === 'story' || type === 'audio'
+    type === 'comment' ||
+    type === 'profile' ||
+    type === 'story' ||
+    type === 'audio' ||
+    type === 'hashtag'
       ? type
       : 'post';
   const { colors, spacing } = useTheme();
@@ -264,7 +269,7 @@ function Done({ target, id }: { target: ReportTarget; id: string }) {
         </Text>
         <Text color="textSecondary" style={styles.text}>
           We&apos;ll use it to help keep the community safe.
-          {target === 'story'
+          {target === 'story' || target === 'hashtag'
             ? ''
             : ` You won't see this ${target === 'profile' ? 'account' : target} in your feed anymore.`}
         </Text>
@@ -298,6 +303,7 @@ function DontLike({ target, id }: { target: ReportTarget; id: string }) {
               {
                 onSuccess: () => {
                   removeFromFeeds(qc, id);
+                  removeFromExplore(qc, id);
                   toast.show("You won't see this post in your feed anymore");
                 },
               },

@@ -56,7 +56,14 @@ export default function CommentsScreen() {
 }
 
 function Comments() {
-  const { id, focus } = useLocalSearchParams<{ id: string; focus?: string }>();
+  const params = useLocalSearchParams<{
+    id: string;
+    focus?: string;
+    /** Opened from Activity "Reply" (page 71): thread + username to reply to. */
+    replyTo?: string;
+    replyUser?: string;
+  }>();
+  const { id, focus } = params;
   const { colors, spacing, hairline } = useTheme();
   const { profile } = useAuth();
   const toast = useToast();
@@ -66,7 +73,11 @@ function Comments() {
   const add = useAddComment(id);
   const remove = useDeleteComment(id);
   const composer = useRef<CommentComposerHandle>(null);
-  const [replyTo, setReplyTo] = useState<{ parentId: string; username: string } | null>(null);
+  const [replyTo, setReplyTo] = useState<{ parentId: string; username: string } | null>(() =>
+    params.replyTo && params.replyUser
+      ? { parentId: params.replyTo, username: params.replyUser }
+      : null,
+  );
   const [pending, setPending] = useState<Pending[]>([]);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [menuFor, setMenuFor] = useState<Comment | null>(null);
@@ -240,7 +251,8 @@ function Comments() {
               composer.current?.setText('');
             }}
             onSubmit={(body) => send(body, replyTo?.parentId ?? null)}
-            autoFocus={focus === '1'}
+            autoFocus={focus === '1' || !!params.replyTo}
+            initialText={params.replyUser ? `@${params.replyUser} ` : undefined}
           />
         </View>
       ) : null}

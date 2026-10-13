@@ -15,6 +15,7 @@ import {
   type IconName,
 } from '@/components';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { removeFromExplore } from '@/features/explore/api';
 import {
   useDeletePost,
   useRemoveMyTag,
@@ -172,6 +173,7 @@ export function PostSheetsProvider({ children }: { children: ReactNode }) {
           hidePost(post, reason);
           if (reason === 'not_interested') removeFromFeeds(qc, post.id);
           if (reason === 'not_interested') removeFromReels(qc, post.id);
+          if (reason === 'not_interested') removeFromExplore(qc, post.id);
         }}
       />
       <ShareSheet

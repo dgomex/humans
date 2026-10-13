@@ -21,7 +21,8 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   saved/{index,new,[id]/index,[id]/edit}  # pages 26–27
   close-friends, favorites            # pages 30–31
   qr/{index,scan}                     # page 24 (full-screen modals)
-  follow-requests                     # STUB of page 72 (Phase 8)
+  activity/{index,requests}           # pages 71 (Notifications) + 72 (Follow requests), pushed from Home ♡ / ☰
+  discover-people                     # page 73 (suggestions with reasons, Connect contacts)
   highlights/{new,[id]/edit}          # page 25 highlight editor (Phase 5)
   compose/                # Phase 3 creation flow (full-screen modal, own Stack + ComposerProvider):
     index (32 entry: Library · Camera · Drafts), camera (33), edit (34/35 crop + strip),
@@ -30,14 +31,18 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   p/[id]/comments         # page 46 (transparent modal + ScreenSheet panel)
   p/[id]/likes            # page 47 (?comment= for comment likers)
   p/[id]/edit             # page 41 Edit info
-  report                  # page 50 report flow (?type=post|comment|profile&id=)
+  report                  # page 50 report flow (?type=post|comment|profile|story|audio|hashtag&id=)
   archive                 # page 28: ▾ Stories archive (grid / calendar, Phase 5) · Posts archive (Phase 3)
   stories/[userId]        # page 52 viewer (tray order); stories/highlight/[id] (57); stories/view?ids= (archive, Add yours)
   story/                  # Phase 5 creation modal (own Stack + StoryComposerProvider): camera (53), editor (54), share (55)
   story-settings/{index,hidden}       # page 55 story settings + Hide story from (page 97 links here later)
-  collab-invites          # STUB until Activity (page 71): collaboration invites
   dev/ui.tsx              # dev-only UI kit + Supabase connectivity check
-  reel/[id]               # page 58: one reel (link → then suggested reels) or a scroller (?source=profile|audio|remixes&owner=)
+  reel/[id]               # page 58: one reel (link → then suggested reels) or a scroller (?source=profile|audio|remixes|tag|search&owner=)
+  (explore)/explore       # page 65 Explore grid (search field → /search)
+  (explore)/search        # pages 66 + 67: recents (empty field), typeahead, results For you · Accounts · Reels · Audio · Tags (?q= re-runs a keyword)
+  (explore)/recent-searches  # page 67 See all + Clear all
+  (home,explore,reels,profile)/tags/[tag]    # page 68 hashtag page (Top · Recent · Reels)
+  (home,explore,reels,profile)/explore-feed  # page 70 post scroller (?id=&source=explore|tag|search&owner=&tab=&title=)
   (home,explore,reels,profile)/audio/[id]    # page 62 audio page (shared, keeps the tab bar)
   (home,explore,reels,profile)/remixes/[id]  # page 63 "View remixes"
   (reels)/reels           # page 58 Reels tab (vertical pager)
@@ -70,6 +75,15 @@ src/
                           # composer.ts (reel actions on the shared composer), format.ts (reel links, session mute / speed),
                           # components/ (ReelPlayer = live edit-list player with 2 alternating video players + music + voiceovers +
                           # overlays + remix layouts, ReelView, ReelPager, FeedReel, ReelGrid, ReelSheets, RangeSlider, VolumeSlider)
+  features/explore/       # Phase 7: api.ts (explore_grid, Explore scroller = source list → similar_posts, hashtag page + grids,
+                          # search accounts / tags / audio / posts, recent searches), format.ts (openTile, openHashtag, hashtagUrl),
+                          # components/ (ExploreGrid = block layout with tall reel tiles + muted autoplay + long-press preview,
+                          # TilePreview, SearchRows)
+  features/activity/      # Phase 8: api.ts (activity_feed infinite query + seen state, badge, delete, inline comment like /
+                          # collab answer, follow requests summary / list / answer / requestFrom, suggestions + dismissals),
+                          # format.ts (section titles, action sentences, openTarget), ActivityAlerts (Realtime listener + top
+                          # banner, root layout), components/ (NotificationRow, ActivityHeart = Home ♡ dot + bubble, Suggestions,
+                          # RequestBanner)
   features/stories/       # Phase 5: types.ts (content doc v1, 1080×1920 canvas), style.ts (story palette, fonts), api.ts (tray, rings,
                           # reels / story_cards + signed URLs, views, likes, replies, sticker answers, viewers, archive, highlights,
                           # settings, hide list), StoryComposer (flow state), StoryUploads (persisted upload queue), viewerQueue,
@@ -97,6 +111,9 @@ scripts/
   seed-stories.mjs        # demo stories (run after seed-feed): stickers, CF story, views / likes / replies, archive + highlight
   seed-reels.mjs          # demo reels (run after seed-feed): photo-clip reels with music, timed text, speed, remixes, a linked reel
   test-reels-rls.mjs      # Phase 6 reels / plays / original audio / remix / linked reel / feed RLS check (four fresh users)
+  test-explore-rls.mjs    # Phase 7 explore / similar / hashtag / search / recent searches / hashtag reports RLS check (four fresh users)
+  test-activity-rls.mjs   # Phase 8 notifications / follow requests / badge / feed / suggestions RLS check (five fresh users)
+  seed-activity.mjs       # demo Activity for dev.viewer + follow requests for cam.private (run after seed-feed; backdates via service key)
   test-stories-rls.mjs    # Phase 5 stories / stickers / views / replies / settings / highlights RLS check (four fresh users)
   lib/seed.mjs            # shared seed helpers (PNG encoder, get-or-create accounts)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
@@ -197,7 +214,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `post_tags` | table | Phase 3 (page 37) | (media_id, tagged_user_id) unique, x/y 0–1 (null on video). Insert/update by author; delete by author or the tagged user; ≤20 people per post |
 | `post_collaborators` | table | Phase 3 (page 36) | (post_id, user_id) status pending/accepted, ≤5. Insert by author (pending, not self); accept/decline via `respond_collab_invite`; delete by either party. Accepted posts appear on the collaborator's grid |
 | `post_mentions` | table | Phase 3 | Trigger-parsed @usernames of published captions (for Phase 8 notifications). Select: mentioned user or post viewers |
-| `hashtags`, `post_hashtags` | tables | Phase 3 **STUB (owned by Phase 7)** | Trigger-parsed from published captions; `hashtags.post_count` trigger-kept. Read-only to clients. Phase 7 adds hashtag pages / search |
+| `hashtags`, `post_hashtags` | tables | Phase 3 stub → finished Phase 7 | Trigger-parsed from published captions; `hashtags.post_count` trigger-kept (every published post using the tag, incl. private / archived). Read-only to clients; pages / search via the Phase 7 RPCs |
 | `audio_tracks`, `saved_audio` | tables | Phase 3 (page 39) | Catalog readable by authenticated, written by service role (`scripts/seed-audio.mjs`, source = placeholder). saved_audio owner-only (Saved tab; Phase 6 Saved → Audio) |
 | `audio` | bucket (public, 20 MB, audio + cover images) | Phase 3 | No client write policies |
 | `publish_post(uuid)` | RPC, security definer | Phase 3 (page 40) | author only; ≥1 media and every path/thumb present in storage → published |
@@ -252,3 +269,23 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `audio_page(track)`, `audio_reels(track, …)`, `reel_remixes(post, …)`, `my_reels(limit)` | RPCs (invoker) | Phase 6 (pages 61–63) | Audio page header (reel count, saved, owner), grid (original first, then popular), remixes, own reels to link |
 | `reports` target_type `audio` | constraint + trigger update | Phase 6 | Visible track, not your own |
 | `is_valid_username` reserved list | function update | Phase 6 | + audio, reel-create |
+| `post_tile(uuid)`, `post_base_score(...)` | helper functions (invoker / immutable) | Phase 7 | Grid tile (cover = reel cover or first slide / poster, media_count, masked play_count, cover_offset); engagement ÷ time decay shared by the Explore / hashtag / search rankings |
+| `posts_caption_fts_idx` | GIN index | Phase 7 (page 66) | `to_tsvector('simple', caption)` for keyword search |
+| `explore_grid(snapshot, offset, limit)` | RPC (invoker) | Phase 7 (page 65) | Public Everyone posts + reels, not own / hidden; affinity to hashtags + authors you engaged with (likes, saves, comments, plays) and accounts your follows follow; followed ×0.5, seen ×0.3, Not-interested authors ×0.2, per-snapshot shuffle. Returns tiles |
+| `similar_posts(post, snapshot, offset, limit)` | RPC (invoker) | Phase 7 (page 70) | similarity = same author 3 + same audio 2 + shared hashtags 1.5 each + co-likers 0.5 each (≤ 6); similar first, then the rest of Explore |
+| `normalize_hashtag(text)`, `hashtag_page(name)`, `hashtag_posts(name, tab, offset, limit)` | RPCs (invoker) | Phase 7 (page 68) | Header (count + top visible post cover); tabs top / recent / reels; visibility via posts RLS |
+| `search_accounts`, `search_hashtags`, `search_audio`, `search_posts(query, kind top/reels, …)` | RPCs (invoker) | Phase 7 (page 66) | Accounts: username / unaccented full name; exact → following → mutuals → prefix → followers, + followed_by / mutual_count. Tags: prefix by post_count. Audio: title / artist / owner (RLS hides invisible original audio), reel_count. Posts: caption FTS, exact hashtag or author username |
+| `search_history` | table | Phase 7 (page 67) | user_id, kind account / hashtag / audio / keyword, target_id or query; unique per (user, kind, target or lower(query)). RLS select / delete own; **writes only via `record_search(kind, target, query)`** (definer: target exists + visible, bumps repeats, keeps 50). `recent_searches(limit)` joins display data and skips unavailable targets |
+| `reports` target_type `hashtag` | constraint + trigger update | Phase 7 | Hashtag must exist (no owner) |
+| `is_valid_username` reserved list | function update | Phase 7 | + explore-feed, recent-searches, search, tags |
+| `notifications` | table | Phase 8 (page 71) | recipient, actor, type (21 kinds: likes, comments / replies / comment likes / mentions, caption mentions, tags, follows, follow_accepted, collab invite / accepted, reposts, story likes / mentions, remix, audio_use, countdown_ended, add_yours, bell_post / reel / story), post / comment / story / audio FKs (cascade), data jsonb; unique per recipient+type+actor+targets, no self. RLS select / delete own; **written only by definer triggers** (`notify()`), retractions delete rows. In `supabase_realtime` |
+| `activity_state` | table | Phase 8 | user_id, seen_at (last Activity visit). Select own; written by `mark_activity_seen()` (returns the previous value for the New section) |
+| `*_notify` triggers | trigger functions (definer) | Phase 8 | on likes, comment_likes, comments, follows, reposts, story_likes, post_mentions, post_tags, post_collaborators; `posts_notify_publish` (tags, collab invites, remix, original-audio use, bell), `stories_notify_publish` (mentions, Add yours to the chain starter, bell). Likes / comments / reposts reach the author + accepted collaborators (`post_owners`) |
+| `approve_follow_request` | function update | Phase 8 (page 72) | + `follow_accepted` notification to the requester |
+| `sync_countdown_notifications()` | RPC (definer) | Phase 8 | Ended countdowns you set a reminder for (≤30 days) → `countdown_ended`; called by `activity_badge` (no cron) |
+| `visible_notifications(before)`, `activity_feed(seen, before, tz, offset, limit)`, `activity_badge()`, `notification_preview(id)` | RPCs (invoker) | Phase 8 | Visible = target passes posts / comments / stories RLS (story mentions + countdowns kept after expiry). Feed: sections new / today / yesterday (in tz) / week / month / older; groups likes per post, comment likes per comment, story likes per story, audio uses per track, follows; returns 2 latest actors, count, post tile, comment (+ liked), story thumb, audio, follow-back state, collab status. Badge: unseen counts (likes / comments / follows / new requests) |
+| `follow_request_summary()`, `my_follow_requests(search, offset, limit)` | RPCs (invoker) | Phase 8 (page 72) | Activity row (count + 2 newest) and the list with Follow back flags. `follow_requests` added to `supabase_realtime` |
+| `suggestion_dismissals` | table | Phase 8 (page 73) | (user_id, target_id). Owner-only select / insert / delete. Dismissed accounts skipped for 180 days |
+| `suggested_accounts(max_count, p_offset)` | RPC (definer) replaced | Phase 8 (page 73) | One source for Discover people, Activity / Home / profile / Explore strips, onboarding: follows you > contacts > friends of friends > co-likers > new > popular; reason, follows_me, mutual_count, mutual_username |
+| `my_collab_invites()` | RPC | Phase 3 | **Unused since Phase 8** (invites live in Activity) |
+| `is_valid_username` reserved list | function update | Phase 8 | + activity, discover-people |

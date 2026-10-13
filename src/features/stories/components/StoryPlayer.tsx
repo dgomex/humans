@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { Avatar, Icon, Text, useToast } from '@/components';
+import { openHashtag } from '@/features/explore/format';
 import { shortAge } from '@/features/feed/format';
 import { avatarUrl } from '@/features/profile/avatar';
 import { openProfile } from '@/features/profile/format';
@@ -288,7 +289,10 @@ export function StoryPlayer(props: StoryPlayerProps) {
       onClose();
       openProfile(username);
     },
-    onHashtag: () => toast.show('Hashtag pages are coming soon'),
+    onHashtag: (tag) => {
+      onClose();
+      openHashtag(tag);
+    },
     onLink: (url) => {
       setHolding(true);
       void WebBrowser.openBrowserAsync(url).finally(() => setHolding(false));

@@ -89,10 +89,11 @@ export function removeFromReels(qc: QueryClient, postId: string) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Scrollers: a profile's Reels tab, an audio page, a reel's remixes — opened at one reel
+// Scrollers: a profile's Reels tab, an audio page, a reel's remixes, a hashtag's / search's
+// Reels tab — opened at one reel
 // ---------------------------------------------------------------------------------------------
 
-export type ReelScrollerSource = 'profile' | 'audio' | 'remixes';
+export type ReelScrollerSource = 'profile' | 'audio' | 'remixes' | 'tag' | 'search';
 const SCROLLER_PAGE = 12;
 
 async function scrollerIds(source: ReelScrollerSource, id: string, offset: number) {
@@ -102,7 +103,11 @@ async function scrollerIds(source: ReelScrollerSource, id: string, offset: numbe
       ? await supabase.rpc('profile_posts', { p_user: id, p_kind: 'reels', ...args })
       : source === 'audio'
         ? await supabase.rpc('audio_reels', { p_track: id, ...args })
-        : await supabase.rpc('reel_remixes', { p_post: id, ...args });
+        : source === 'tag'
+          ? await supabase.rpc('hashtag_posts', { p_name: id, p_tab: 'reels', ...args })
+          : source === 'search'
+            ? await supabase.rpc('search_posts', { p_query: id, p_kind: 'reels', ...args })
+            : await supabase.rpc('reel_remixes', { p_post: id, ...args });
   if (error) throw error;
   return data.map((r) => r.id);
 }

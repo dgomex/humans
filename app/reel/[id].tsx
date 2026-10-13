@@ -13,13 +13,14 @@ import { useTheme } from '@/theme';
 /**
  * Page 58 — a reel opened from a profile's Reels tab, an audio page, remixes (scroller of that
  * list, starting at the tapped reel) or a link (that reel, then suggested reels).
- * Params: `id`, optional `source` (profile | audio | remixes) + `owner` (user / track / reel id).
+ * Params: `id`, optional `source` (profile | audio | remixes | tag | search) + `owner` (user /
+ * track / reel id, hashtag name or search query).
  */
 export default function ReelScreen() {
   const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id: string; source?: string; owner?: string }>();
-  const source = (['profile', 'audio', 'remixes'] as const).includes(
+  const source = (['profile', 'audio', 'remixes', 'tag', 'search'] as const).includes(
     params.source as ReelScrollerSource,
   )
     ? (params.source as ReelScrollerSource)

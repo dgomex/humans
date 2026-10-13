@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components';
+import { ActivityAlerts } from '@/features/activity/ActivityAlerts';
 import { AuthProvider, useAuth, type AuthGate } from '@/features/auth/AuthProvider';
 import { UploadQueueProvider } from '@/features/create/UploadQueue';
 import { PostSheetsProvider } from '@/features/feed/components/PostSheets';
@@ -84,88 +85,94 @@ function RootNavigator() {
   const g = gate === 'loading' ? stableGate : gate;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={g === 'signedIn'}>
-        <Stack.Screen name="(tabs)" />
-        {/* Phase 3 — Creation (pages 32–42) */}
-        <Stack.Screen
-          name="compose"
-          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen name="p/[id]/index" />
-        {/* Phase 4 — Feed & interactions (pages 44–50) */}
-        <Stack.Screen
-          name="p/[id]/comments"
-          // Transparent full-window route; the screen draws its own bottom sheet (ScreenSheet)
-          // so keyboard and layout use real window coordinates (native form sheets don't).
-          options={{ presentation: 'transparentModal', animation: 'none' }}
-        />
-        <Stack.Screen name="p/[id]/likes" />
-        <Stack.Screen
-          name="report"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen
-          name="p/[id]/edit"
-          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen name="archive" />
-        {/* Phase 5 — Stories (pages 52–57) */}
-        <Stack.Screen
-          name="stories/[userId]"
-          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
-        />
-        <Stack.Screen
-          name="stories/highlight/[id]"
-          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
-        />
-        <Stack.Screen
-          name="stories/view"
-          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
-        />
-        <Stack.Screen
-          name="story"
-          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
-        />
-        {/* Phase 6 — Reels (pages 58–64; creation lives in compose/reel/*) */}
-        <Stack.Screen name="reel/[id]" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="saved/audio" />
-        <Stack.Screen name="story-settings/index" />
-        <Stack.Screen name="story-settings/hidden" />
-        <Stack.Screen name="highlights/[id]/edit" />
-        <Stack.Screen name="collab-invites" />
-        <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
-        {/* Phase 2 — Profile (screens without the tab bar) */}
-        <Stack.Screen name="edit-profile/index" />
-        <Stack.Screen name="edit-profile/[field]" />
-        <Stack.Screen name="edit-profile/links" />
-        <Stack.Screen name="saved/index" />
-        <Stack.Screen name="saved/new" />
-        <Stack.Screen name="saved/[id]/index" />
-        <Stack.Screen name="saved/[id]/edit" />
-        <Stack.Screen name="close-friends" />
-        <Stack.Screen name="favorites" />
-        <Stack.Screen name="follow-requests" />
-        <Stack.Screen name="highlights/new" />
-        <Stack.Screen
-          name="qr/index"
-          options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen name="qr/scan" options={{ presentation: 'fullScreenModal' }} />
-      </Stack.Protected>
-      <Stack.Protected guard={g === 'signedOut'}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      <Stack.Protected guard={g === 'onboarding'}>
-        <Stack.Screen name="(onboarding)" options={{ animation: 'fade' }} />
-      </Stack.Protected>
-      <Stack.Protected guard={g === 'recovery'}>
-        <Stack.Screen name="(recovery)/new-password" options={{ animation: 'fade' }} />
-      </Stack.Protected>
-      <Stack.Protected guard={g === 'savePrompt'}>
-        <Stack.Screen name="(session)/save-login" options={{ animation: 'fade' }} />
-      </Stack.Protected>
-      <Stack.Screen name="legal/[doc]" options={{ presentation: 'modal' }} />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={g === 'signedIn'}>
+          <Stack.Screen name="(tabs)" />
+          {/* Phase 3 — Creation (pages 32–42) */}
+          <Stack.Screen
+            name="compose"
+            options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen name="p/[id]/index" />
+          {/* Phase 4 — Feed & interactions (pages 44–50) */}
+          <Stack.Screen
+            name="p/[id]/comments"
+            // Transparent full-window route; the screen draws its own bottom sheet (ScreenSheet)
+            // so keyboard and layout use real window coordinates (native form sheets don't).
+            options={{ presentation: 'transparentModal', animation: 'none' }}
+          />
+          <Stack.Screen name="p/[id]/likes" />
+          <Stack.Screen
+            name="report"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen
+            name="p/[id]/edit"
+            options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen name="archive" />
+          {/* Phase 5 — Stories (pages 52–57) */}
+          <Stack.Screen
+            name="stories/[userId]"
+            options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="stories/highlight/[id]"
+            options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="stories/view"
+            options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="story"
+            options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+          />
+          {/* Phase 6 — Reels (pages 58–64; creation lives in compose/reel/*) */}
+          <Stack.Screen name="reel/[id]" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="saved/audio" />
+          <Stack.Screen name="story-settings/index" />
+          <Stack.Screen name="story-settings/hidden" />
+          <Stack.Screen name="highlights/[id]/edit" />
+          {/* Phase 8 — Notifications / Activity (pages 71–73) */}
+          <Stack.Screen name="activity/index" />
+          <Stack.Screen name="activity/requests" />
+          <Stack.Screen name="discover-people" />
+          <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
+          {/* Phase 2 — Profile (screens without the tab bar) */}
+          <Stack.Screen name="edit-profile/index" />
+          <Stack.Screen name="edit-profile/[field]" />
+          <Stack.Screen name="edit-profile/links" />
+          <Stack.Screen name="saved/index" />
+          <Stack.Screen name="saved/new" />
+          <Stack.Screen name="saved/[id]/index" />
+          <Stack.Screen name="saved/[id]/edit" />
+          <Stack.Screen name="close-friends" />
+          <Stack.Screen name="favorites" />
+          <Stack.Screen name="highlights/new" />
+          <Stack.Screen
+            name="qr/index"
+            options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen name="qr/scan" options={{ presentation: 'fullScreenModal' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={g === 'signedOut'}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={g === 'onboarding'}>
+          <Stack.Screen name="(onboarding)" options={{ animation: 'fade' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={g === 'recovery'}>
+          <Stack.Screen name="(recovery)/new-password" options={{ animation: 'fade' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={g === 'savePrompt'}>
+          <Stack.Screen name="(session)/save-login" options={{ animation: 'fade' }} />
+        </Stack.Protected>
+        <Stack.Screen name="legal/[doc]" options={{ presentation: 'modal' }} />
+      </Stack>
+      {/* In-app alerts (Realtime banner + ♡ badge refresh); no OS push yet. */}
+      {g === 'signedIn' ? <ActivityAlerts /> : null}
+    </>
   );
 }
