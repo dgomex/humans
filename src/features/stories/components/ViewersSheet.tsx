@@ -188,7 +188,10 @@ export function ViewersSheet({
                     <Icon name="more" size={22} />
                   </Pressable>
                   <Pressable
-                    onPress={() => toast.show('Messages are coming soon')}
+                    onPress={() => {
+                      onClose();
+                      router.push(`/direct/u/${v.user_id}`);
+                    }}
                     hitSlop={10}
                     accessibilityRole="button"
                     accessibilityLabel={`Message ${v.username}`}

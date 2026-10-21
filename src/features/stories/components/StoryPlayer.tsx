@@ -3,7 +3,7 @@ import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { useVideoPlayer } from 'expo-video';
 import * as WebBrowser from 'expo-web-browser';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Keyboard, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -94,6 +94,8 @@ export function StoryPlayer(props: StoryPlayerProps) {
   const [askFor, setAskFor] = useState<{ stickerId: string; prompt: string } | null>(null);
   const [chainFor, setChainFor] = useState<{ chainId: string; prompt: string } | null>(null);
   const [appActive, setAppActive] = useState(true);
+  // Paused while another screen (e.g. Send to) covers the viewer.
+  const focused = useIsFocused();
   const [video, setVideo] = useState<{ id: string; ms: number } | null>(null);
   const videoMs = card && video?.id === card.id ? video.ms : null;
   const [replySignal, setReplySignal] = useState(0);
@@ -101,6 +103,7 @@ export function StoryPlayer(props: StoryPlayerProps) {
 
   const paused =
     !active ||
+    !focused ||
     holding ||
     dragging ||
     typing ||

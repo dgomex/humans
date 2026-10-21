@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -103,7 +104,7 @@ export function StoryFooter({
         <FooterAction
           icon="sendPlane"
           label="Send"
-          onPress={() => toast.show('Sending stories in messages is coming soon')}
+          onPress={() => router.push({ pathname: '/direct/send', params: { story: card.id } })}
         />
         <FooterAction icon="more" label="More" onPress={onOpenOptions} />
         <HighlightPickerSheet
@@ -214,7 +215,9 @@ export function StoryFooter({
             ) : null}
             {card.author.is_private ? null : (
               <Pressable
-                onPress={() => toast.show('Sending stories in messages is coming soon')}
+                onPress={() =>
+                  router.push({ pathname: '/direct/send', params: { story: card.id } })
+                }
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Share"

@@ -726,7 +726,8 @@ export function useLikers(target: LikersTarget, search: string) {
 // Reports (page 50)
 // ---------------------------------------------------------------------------------------------
 
-export type ReportTarget = 'post' | 'comment' | 'profile' | 'story' | 'audio' | 'hashtag';
+export type ReportTarget =
+  'post' | 'comment' | 'profile' | 'story' | 'audio' | 'hashtag' | 'message' | 'thread';
 export type ReportReason = Database['public']['Tables']['reports']['Insert']['reason'];
 
 export function useReport() {

@@ -49,7 +49,11 @@ app/                      # Expo Router routes (file = screen). Root app/, NOT s
   compose/reel/           # Phase 6 creation (same compose Stack + ComposerProvider, `state.reel`): camera (59 + remix 63),
                           # edit (60 tools), timeline (60 Edit video), voiceover, details (61), cover (61)
   saved/audio             # page 26 → Audio tile (saved sounds)
-  direct/…                # future
+  direct/                 # Phase 9 (pages 74–81): index (inbox + notes row), requests (?hidden=1), new (77), new-group (78),
+                          # note (81 composer), send (Send to sheet: ?post|story|profile|audio|forward=), media/[messageId] (80),
+                          # u/[userId] (profile Message → 1:1), join/[token] (invite link), t/[id]/{index (76), details (79),
+                          # members, add, nicknames, theme, filtered (pinned · media/links/posts · scheduled · search),
+                          # invite (link + QR), join-requests}
 src/
   components/             # shared UI: Avatar, Button, BottomSheet, Toast, Icon, Text, TextField, UserRow, ActionRow/ActionGroup (sheet menus), SearchField (barrel: @/components)
   features/<area>/        # per-area logic: api.ts (Supabase queries), hooks.ts, components/
@@ -90,6 +94,12 @@ src/
                           # saveMedia(.web).ts, components/ (StoryCanvas, StickerView, StoryPlayer, StoryPager, StoryFooter,
                           # StorySheets, ViewersSheet, StoriesTray, StoryThumb, ArchiveGrid, HighlightEditor, editor/{EditableElement,
                           # TextTool, DrawTool, StickerTray})
+  features/direct/        # Phase 9: api.ts (inbox / badge / thread info / messages + signed URLs, sendMessage + sendToTargets
+                          # (uploads), message actions, thread RPC mutation, notes, presence, purge), format.ts (titles, previews,
+                          # system lines, seen text, THEMES, mute options), realtime.tsx (DirectAlerts = inbox topic + banner +
+                          # presence heartbeat + file purge; useThreadChannel = thread topic + typing), media.ts (picker, camera,
+                          # 1440 px downscale), saveMedia(.web).ts, components/ (ThreadRow, ThreadAvatar, Notes = NotesRow /
+                          # NoteSheet / ProfileNote, MessageBubble, MessageContent, Composer, ThreadSheets, PeoplePicker, DirectIcon)
   lib/navigation.ts       # goBack(fallback): back, or replace when there's no history (deep links / reloads)
   lib/useDebounced.ts     # debounced value (search fields)
   lib/dialog.ts           # showDialog(): native Alert, browser confirm/alert on web — use instead of Alert
@@ -114,6 +124,8 @@ scripts/
   test-explore-rls.mjs    # Phase 7 explore / similar / hashtag / search / recent searches / hashtag reports RLS check (four fresh users)
   test-activity-rls.mjs   # Phase 8 notifications / follow requests / badge / feed / suggestions RLS check (five fresh users)
   seed-activity.mjs       # demo Activity for dev.viewer + follow requests for cam.private (run after seed-feed; backdates via service key)
+  test-direct-rls.mjs     # Phase 9 DMs / requests / groups / media / vanish / scheduled / notes / presence / realtime RLS check (five fresh users; --cron waits for delivery)
+  seed-direct.mjs         # demo DMs for dev.viewer: chats, a group, requests, notes (run after seed-audio + seed-feed)
   test-stories-rls.mjs    # Phase 5 stories / stickers / views / replies / settings / highlights RLS check (four fresh users)
   lib/seed.mjs            # shared seed helpers (PNG encoder, get-or-create accounts)
   create-test-user.mjs    # create a finished local account; logins → .test-users.local.json (git-ignored)
@@ -163,7 +175,7 @@ docs/                     # PLAN, ARCHITECTURE, DECISIONS, pages/, EXPO_AGENTS.m
 | `posts` | private (signed URLs; `can_view_post`) | `{user_id}/{post_id}/{media_id}.{jpg\|mp4\|mov}`, video poster `{media_id}-thumb.jpg` |
 | `reels` | private | `{user_id}/{reel_id}/video.mp4`, `cover.jpg` |
 | `stories` | private (signed URLs; `can_view_story`), visible 24h (archive / highlights kept) | `{user_id}/{story_id}/{media.jpg\|media.mp4\|thumb.jpg\|cell-N.jpg\|frame-N.jpg\|sticker-{id}.jpg}` |
-| `messages` | private (thread participants only) | `{thread_id}/{message_id}.{ext}` |
+| `messages` | private (signed URLs; `can_view_message_object`: thread readers, view-once only right after `open_message_media`) | `{thread_id}/{message_id}.{jpg\|mp4\|m4a\|webm…}`, video poster `{message_id}-thumb.jpg`, group photo `{thread_id}/group-{uuid}.jpg`. **First segment is the thread, not the owner**; uploader = `owner_id` |
 | `highlights-covers` | public | `{user_id}/{highlight_id}.jpg` |
 | `audio` | public | `placeholder/{slug}.wav` (catalog, written by the service role only) |
 
@@ -178,7 +190,7 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `posts` | bucket (private, 100 MB, image+video) | Phase 0 | Owner write. Viewer select `posts_select_viewer` (Phase 3) = `can_view_post_object(name)` |
 | `reels` | bucket (private, 100 MB, video+cover image) | Phase 0 | **Unused**: reels are posts, so their files live in the `posts` bucket (Phase 6 decision) |
 | `stories` | bucket (private, 50 MB, image+video) | Phase 0 | Owner write. Viewer select `stories_select_viewer` (Phase 5) = `can_view_story_object(name)` |
-| `messages` | bucket (private, 50 MB, image/video/audio/gif) | Phase 0 | **No policies = deny all.** Phase 9 adds thread-participant policies (path `{thread_id}/…`) |
+| `messages` | bucket (private, 50 MB, image/video/audio/gif) | Phase 0 → Phase 9 | Phase 9 policies: insert by non-left members into `{thread_id}/…`; select own uploads (`owner_id`) or `can_view_message_object`; delete own uploads. + audio/webm, ogg, x-m4a |
 | `highlights-covers` | bucket (public, 5 MB, images) | Phase 0 | Owner-only write |
 | `<bucket>_{select,insert,update,delete}_owner` | storage.objects RLS policies | Phase 0 | 20 policies; check `(storage.foldername(name))[1] = auth.uid()` |
 | `profiles` | table | Phase 1 (pages 008/009) | id = auth.users.id; username (unique, lowercase, `is_valid_username`), full_name ≤64, avatar_path (own folder). RLS: select authenticated; update own (username, full_name, avatar_path only); no client insert/delete |
@@ -289,3 +301,18 @@ _Update this when a migration adds or changes tables, functions, or buckets._
 | `suggested_accounts(max_count, p_offset)` | RPC (definer) replaced | Phase 8 (page 73) | One source for Discover people, Activity / Home / profile / Explore strips, onboarding: follows you > contacts > friends of friends > co-likers > new > popular; reason, follows_me, mutual_count, mutual_username |
 | `my_collab_invites()` | RPC | Phase 3 | **Unused since Phase 8** (invites live in Activity) |
 | `is_valid_username` reserved list | function update | Phase 8 | + activity, discover-people |
+| `threads` | table | Phase 9 (pages 74–79) | kind direct (one per pair: `direct_key`) / group (title ≤100, photo_path, approval_required, invite_token), theme (10 presets), vanish_mode (1:1), last_message_at / last_message_id (trigger-kept). RLS select members (any status); **no client writes** (RPCs) |
+| `thread_members` | table | Phase 9 | (thread, user) role admin/member, status active / request / hidden / left, joined_via, joined_at (history starts here), left_at, last_read_at, read_receipts, muted_until, pinned_at (≤3 per user), marked_unread, cleared_at ("Delete chat"), nickname. RLS select / update **own row** (column grant: read_receipts, muted_until, pinned_at, marked_unread); others' rows only via `thread_info` |
+| `thread_join_requests` | table | Phase 9 (page 78) | Approve new members: (thread, user, added_by null = invite link). Select: the person or active admins; writes via RPCs |
+| `messages` | table | Phase 9 (page 76) | kind text / media / voice / post / story / profile / audio / system; body ≤1000; reply_to_id; post / story / profile / audio / note FKs (set null → "unavailable"); media_type, media_path / thumb_path (`{thread}/{id}…`, must exist + be yours), width / height, duration (video ≤180 s, voice 0.3–300 s), waveform; view_mode keep / once / replay; data (system event, story_reply / reaction, note snapshot); vanish; pinned_at (≤3 per chat); edited_at; scheduled_for. RLS select `can_read_message` (joined_at … left_at, after cleared_at; scheduled = sender only); insert own (column grant, `messages_before_insert` validates: membership, **request = one text message until accepted** (story replies exempt), kind/column rules, files, reply in same thread, schedule 30 s…29 days text only); delete own (unsend). Edit / pin via RPCs |
+| `message_reactions` | table | Phase 9 | (message, user) one emoji. Select when the message is readable; insert / update / delete own, active members only |
+| `message_views` | table | Phase 9 (page 80) | view-once / replay views (count, screenshot_at). Select: viewer or sender; written by `open_message_media` / `note_screenshot` |
+| `notes`, `note_likes` | tables | Phase 9 (page 81) | Note ≤60 chars and/or catalog song (+ start), audience mutuals / close_friends, 24 h, one active per author (trigger). `can_view_note`. Likes: liker + author read; insert on visible, not own. Expired notes purged by the cron job |
+| `user_presence` | table | Phase 9 | last_active_at (own select only); written by `touch_presence()`, read via `presence_of(ids)` (follow either way, or a shared accepted chat) |
+| `can_read_message`, `can_view_message_object`, `can_view_note`, `my_thread_status`, `realtime_thread_member`, `is_flagged_text` | helper functions | Phase 9 | Visibility helpers used by RLS / storage / realtime policies. `is_flagged_text` = built-in Hidden requests word list (page 95 adds personal Hidden words) |
+| `get_or_create_direct(other)`, `create_group_thread(ids, title)`, `add_thread_members`, `answer_join_request`, `thread_join_request_list`, `remove_thread_member`, `leave_thread`, `set_thread_admin`, `rename_thread`, `set_thread_photo`, `set_thread_theme`, `set_thread_approval`, `set_nickname`, `set_vanish_mode`, `end_vanish_session`, `note_screenshot`, `create_thread_invite` / `disable_thread_invite` / `thread_invite_preview` / `join_thread_by_invite`, `accept_thread`, `clear_thread`, `clear_requests`, `mark_thread_read`, `edit_message` (15 min), `pin_message`, `open_message_media`, `my_purgeable_message_files` | RPCs (definer) | Phase 9 | Thread / group / message writes; every change posts a system line (`data.event`: created, renamed, photo, theme, added, removed, left, joined, admin, nickname, vanish_on / vanish_off, pinned, approval, screenshot). Last admin leaving promotes the longest-standing member (ties: earliest accepted; follow-up migration `phase9_admin_tiebreak`). Invite links ≤250 joins / day |
+| `inbox_threads(folder, before, limit, query)`, `direct_badge()`, `thread_info(thread)`, `thread_messages(thread, before, limit, filter, query)`, `share_suggestions(query, limit)`, `notes_tray()`, `note_likers(note)`, `presence_of(ids)`, `touch_presence()` | RPCs | Phase 9 | Inbox / Requests / Hidden (pinned first, unread count ≤5, seen), ✈ badge, header + members + seen times (receipts on both sides), messages with reply / story / profile / audio snippets + reactions + views (filters pinned / media / links / posts / scheduled + search), Send-to targets |
+| Realtime broadcast | private topics | Phase 9 | Triggers `realtime.send` to `thread:{id}` (message, message_updated, message_deleted, reaction, read, accepted, join_requests) and `inbox:{user}`; clients send `typing` on `thread:{id}`. `realtime.messages` policies: receive inbox (own) / thread (non-left member); send thread (active member) |
+| `story_replies_to_dm` | trigger | Phase 9 | Story replies / reactions also become a 1:1 message (`story_id`, `data.story_reply`, `reaction`); pre-Phase-9 replies backfilled |
+| `deliver_scheduled_messages()` | pg_cron job (every minute) | Phase 9 | Delivers due scheduled messages, drops those of senders who left, purges notes expired >1 day. **First pg_cron job** in the project |
+| `reports` target_type `message`, `thread` | constraint + trigger update | Phase 9 | Readable message (not your own) / a group you're in |

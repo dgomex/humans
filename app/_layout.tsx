@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components';
 import { ActivityAlerts } from '@/features/activity/ActivityAlerts';
+import { DirectAlerts } from '@/features/direct/realtime';
 import { AuthProvider, useAuth, type AuthGate } from '@/features/auth/AuthProvider';
 import { UploadQueueProvider } from '@/features/create/UploadQueue';
 import { PostSheetsProvider } from '@/features/feed/components/PostSheets';
@@ -139,6 +140,37 @@ function RootNavigator() {
           <Stack.Screen name="activity/index" />
           <Stack.Screen name="activity/requests" />
           <Stack.Screen name="discover-people" />
+          {/* Phase 9 — Direct (pages 74–81) */}
+          <Stack.Screen name="direct/index" />
+          <Stack.Screen name="direct/requests" />
+          <Stack.Screen name="direct/t/[id]/index" />
+          <Stack.Screen name="direct/t/[id]/details" />
+          <Stack.Screen name="direct/t/[id]/members" />
+          <Stack.Screen name="direct/t/[id]/add" />
+          <Stack.Screen name="direct/t/[id]/nicknames" />
+          <Stack.Screen name="direct/t/[id]/theme" />
+          <Stack.Screen name="direct/t/[id]/filtered" />
+          <Stack.Screen name="direct/t/[id]/invite" />
+          <Stack.Screen name="direct/t/[id]/join-requests" />
+          <Stack.Screen name="direct/u/[userId]" options={{ animation: 'none' }} />
+          <Stack.Screen name="direct/join/[token]" />
+          <Stack.Screen
+            name="direct/new"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen name="direct/new-group" />
+          <Stack.Screen
+            name="direct/note"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+          <Stack.Screen
+            name="direct/send"
+            options={{ presentation: 'transparentModal', animation: 'none' }}
+          />
+          <Stack.Screen
+            name="direct/media/[messageId]"
+            options={{ presentation: 'transparentModal', animation: 'fade' }}
+          />
           <Stack.Screen name="dev/ui" options={{ headerShown: true, title: 'UI kit' }} />
           {/* Phase 2 — Profile (screens without the tab bar) */}
           <Stack.Screen name="edit-profile/index" />
@@ -173,6 +205,8 @@ function RootNavigator() {
       </Stack>
       {/* In-app alerts (Realtime banner + ♡ badge refresh); no OS push yet. */}
       {g === 'signedIn' ? <ActivityAlerts /> : null}
+      {/* Direct: inbox / badge refresh, message banners, presence (Phase 9). */}
+      {g === 'signedIn' ? <DirectAlerts /> : null}
     </>
   );
 }

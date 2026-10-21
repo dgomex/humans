@@ -337,6 +337,173 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"message_reactions": {
+                  Row: {
+                    "created_at": string,"emoji": string,"message_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"emoji": string,"message_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"emoji"?: string,"message_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "message_reactions_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "message_reactions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"message_views": {
+                  Row: {
+                    "first_viewed_at": string,"last_viewed_at": string,"message_id": string,"screenshot_at": string | null,"user_id": string,"view_count": number
+                  }
+                  Insert: {
+                    "first_viewed_at"?: string,"last_viewed_at"?: string,"message_id": string,"screenshot_at"?: string | null,"user_id": string,"view_count"?: number
+                  }
+                  Update: {
+                    "first_viewed_at"?: string,"last_viewed_at"?: string,"message_id"?: string,"screenshot_at"?: string | null,"user_id"?: string,"view_count"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "message_views_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "message_views_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"messages": {
+                  Row: {
+                    "audio_id": string | null,"body": string | null,"created_at": string,"data": NonNullable<Json>,"duration_ms": number | null,"edited_at": string | null,"height": number | null,"id": string,"kind": string,"media_path": string | null,"media_type": string | null,"note_id": string | null,"pinned_at": string | null,"pinned_by": string | null,"post_id": string | null,"profile_id": string | null,"reply_to_id": string | null,"scheduled_for": string | null,"sender_id": string,"story_id": string | null,"thread_id": string,"thumb_path": string | null,"vanish": boolean,"view_mode": string,"waveform": Json | null,"width": number | null
+                  }
+                  Insert: {
+                    "audio_id"?: string | null,"body"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"duration_ms"?: number | null,"edited_at"?: string | null,"height"?: number | null,"id"?: string,"kind"?: string,"media_path"?: string | null,"media_type"?: string | null,"note_id"?: string | null,"pinned_at"?: string | null,"pinned_by"?: string | null,"post_id"?: string | null,"profile_id"?: string | null,"reply_to_id"?: string | null,"scheduled_for"?: string | null,"sender_id"?: string,"story_id"?: string | null,"thread_id": string,"thumb_path"?: string | null,"vanish"?: boolean,"view_mode"?: string,"waveform"?: Json | null,"width"?: number | null
+                  }
+                  Update: {
+                    "audio_id"?: string | null,"body"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"duration_ms"?: number | null,"edited_at"?: string | null,"height"?: number | null,"id"?: string,"kind"?: string,"media_path"?: string | null,"media_type"?: string | null,"note_id"?: string | null,"pinned_at"?: string | null,"pinned_by"?: string | null,"post_id"?: string | null,"profile_id"?: string | null,"reply_to_id"?: string | null,"scheduled_for"?: string | null,"sender_id"?: string,"story_id"?: string | null,"thread_id"?: string,"thumb_path"?: string | null,"vanish"?: boolean,"view_mode"?: string,"waveform"?: Json | null,"width"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "messages_audio_id_fkey"
+      columns: ["audio_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_note_id_fkey"
+      columns: ["note_id"]
+isOneToOne: false
+      referencedRelation: "notes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_pinned_by_fkey"
+      columns: ["pinned_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_profile_id_fkey"
+      columns: ["profile_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_reply_to_id_fkey"
+      columns: ["reply_to_id"]
+isOneToOne: false
+      referencedRelation: "messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_story_id_fkey"
+      columns: ["story_id"]
+isOneToOne: false
+      referencedRelation: "stories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "threads"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"note_likes": {
+                  Row: {
+                    "created_at": string,"note_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"note_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"note_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "note_likes_note_id_fkey"
+      columns: ["note_id"]
+isOneToOne: false
+      referencedRelation: "notes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "note_likes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notes": {
+                  Row: {
+                    "audience": string,"audio_start_ms": number,"audio_track_id": string | null,"author_id": string,"body": string | null,"created_at": string,"expires_at": string,"id": string
+                  }
+                  Insert: {
+                    "audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"body"?: string | null,"created_at"?: string,"expires_at"?: string,"id"?: string
+                  }
+                  Update: {
+                    "audience"?: string,"audio_start_ms"?: number,"audio_track_id"?: string | null,"author_id"?: string,"body"?: string | null,"created_at"?: string,"expires_at"?: string,"id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notes_audio_track_id_fkey"
+      columns: ["audio_track_id"]
+isOneToOne: false
+      referencedRelation: "audio_tracks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notes_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notifications": {
                   Row: {
                     "actor_id": string,"audio_id": string | null,"comment_id": string | null,"created_at": string,"data": NonNullable<Json>,"id": string,"post_id": string | null,"recipient_id": string,"story_id": string | null,"type": string
@@ -1092,6 +1259,112 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"thread_join_requests": {
+                  Row: {
+                    "added_by": string | null,"created_at": string,"thread_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "added_by"?: string | null,"created_at"?: string,"thread_id": string,"user_id": string
+                  }
+                  Update: {
+                    "added_by"?: string | null,"created_at"?: string,"thread_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "thread_join_requests_added_by_fkey"
+      columns: ["added_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thread_join_requests_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "threads"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thread_join_requests_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"thread_members": {
+                  Row: {
+                    "accepted_at": string | null,"added_by": string | null,"cleared_at": string | null,"joined_at": string,"joined_via": string,"last_read_at": string,"left_at": string | null,"marked_unread": boolean,"muted_until": string | null,"nickname": string | null,"pinned_at": string | null,"read_receipts": boolean,"role": string,"status": string,"thread_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "accepted_at"?: string | null,"added_by"?: string | null,"cleared_at"?: string | null,"joined_at"?: string,"joined_via"?: string,"last_read_at"?: string,"left_at"?: string | null,"marked_unread"?: boolean,"muted_until"?: string | null,"nickname"?: string | null,"pinned_at"?: string | null,"read_receipts"?: boolean,"role"?: string,"status"?: string,"thread_id": string,"user_id": string
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"added_by"?: string | null,"cleared_at"?: string | null,"joined_at"?: string,"joined_via"?: string,"last_read_at"?: string,"left_at"?: string | null,"marked_unread"?: boolean,"muted_until"?: string | null,"nickname"?: string | null,"pinned_at"?: string | null,"read_receipts"?: boolean,"role"?: string,"status"?: string,"thread_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "thread_members_added_by_fkey"
+      columns: ["added_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thread_members_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "threads"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "thread_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"threads": {
+                  Row: {
+                    "approval_required": boolean,"created_at": string,"created_by": string | null,"direct_key": string | null,"id": string,"invite_token": string | null,"kind": string,"last_message_at": string | null,"last_message_id": string | null,"photo_path": string | null,"theme": string,"title": string | null,"vanish_mode": boolean
+                  }
+                  Insert: {
+                    "approval_required"?: boolean,"created_at"?: string,"created_by"?: string | null,"direct_key"?: string | null,"id"?: string,"invite_token"?: string | null,"kind": string,"last_message_at"?: string | null,"last_message_id"?: string | null,"photo_path"?: string | null,"theme"?: string,"title"?: string | null,"vanish_mode"?: boolean
+                  }
+                  Update: {
+                    "approval_required"?: boolean,"created_at"?: string,"created_by"?: string | null,"direct_key"?: string | null,"id"?: string,"invite_token"?: string | null,"kind"?: string,"last_message_at"?: string | null,"last_message_id"?: string | null,"photo_path"?: string | null,"theme"?: string,"title"?: string | null,"vanish_mode"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "threads_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "threads_last_message_fk"
+      columns: ["last_message_id"]
+isOneToOne: false
+      referencedRelation: "messages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_presence": {
+                  Row: {
+                    "last_active_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "last_active_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "last_active_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_presence_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"username_changes": {
                   Row: {
                     "changed_at": string,"id": string,"new_username": string,"old_username": string,"user_id": string
@@ -1117,7 +1390,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "account_about":
+            "accept_thread":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
+"account_about":
 { Args: { "p_user_id": string }; Returns: {
               "avatar_path": string,"date_joined": string,"former_usernames_count": number,"id": string,"username": string
             }[]
@@ -1132,10 +1408,19 @@ isOneToOne: false
               "actor_count": number,"actor_follow": Json,"actors": Json,"audio": Json,"collab_status": string,"comment": Json,"data": Json,"group_key": string,"ids": (string)[],"latest_at": string,"post": Json,"section": string,"story": Json,"type": string
             }[]
                            },
+"add_system_message":
+{ Args: { "p_actor": string,"p_data"?: Json,"p_event": string,"p_thread": string }; Returns: string
+                           },
+"add_thread_members":
+{ Args: { "p_members": (string)[],"p_thread": string }; Returns: string
+                           },
 "add_yours_chain":
 { Args: { "p_chain": string,"p_limit"?: number,"p_offset"?: number }; Returns: {
               "avatar_path": string,"is_active": boolean,"kind": string,"published_at": string,"story_id": string,"thumb_path": string,"user_id": string,"username": string
             }[]
+                           },
+"answer_join_request":
+{ Args: { "p_approve": boolean,"p_thread": string,"p_user": string }; Returns: undefined
                            },
 "approve_follow_request":
 { Args: { "requester": string }; Returns: boolean
@@ -1153,6 +1438,15 @@ isOneToOne: false
               "email": string,"has_profile": boolean,"user_id": string,"username": string
             }[]
                            },
+"can_read_message":
+{ Args: { "p_created": string,"p_scheduled": string,"p_sender": string,"p_thread": string }; Returns: boolean
+                           },
+"can_view_message_object":
+{ Args: { "object_name": string }; Returns: boolean
+                           },
+"can_view_note":
+{ Args: { "p_note": string }; Returns: boolean
+                           },
 "can_view_post":
 { Args: { "p_post": string }; Returns: boolean
                            },
@@ -1167,6 +1461,12 @@ isOneToOne: false
                            },
 "can_view_story_object":
 { Args: { "object_name": string }; Returns: boolean
+                           },
+"clear_requests":
+{ Args: { "p_hidden"?: boolean }; Returns: number
+                           },
+"clear_thread":
+{ Args: { "p_thread": string }; Returns: undefined
                            },
 "comment_likers":
 { Args: { "p_comment": string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string }; Returns: {
@@ -1194,6 +1494,36 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_group_thread":
+{ Args: { "p_members": (string)[],"p_title"?: string }; Returns: string
+                           },
+"create_thread_invite":
+{ Args: { "p_thread": string }; Returns: string
+                           },
+"deliver_scheduled_messages":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"direct_badge":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"direct_key":
+{ Args: { "a": string,"b": string }; Returns: string
+                           },
+"disable_thread_invite":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
+"edit_message":
+{ Args: { "p_body": string,"p_message": string }; Returns: undefined
+                           },
+"end_vanish_session":
+{ Args: { "p_thread": string }; Returns: number
+                           },
+"ensure_direct_thread":
+{ Args: { "p_me": string,"p_other": string }; Returns: string
+                           },
+"ensure_thread_admin":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
 "explore_grid":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_snapshot"?: string }; Returns: {
               "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number,"score": number
@@ -1211,6 +1541,9 @@ isOneToOne: false
 { Args: { "p_before"?: string,"p_before_id"?: string,"p_kind"?: string,"p_limit"?: number }; Returns: {
               "post_id": string,"published_at": string
             }[]
+                           },
+"get_or_create_direct":
+{ Args: { "p_other": string }; Returns: string
                            },
 "get_profile":
 { Args: { "p_user_id"?: string,"p_username"?: string }; Returns: {
@@ -1235,6 +1568,14 @@ isOneToOne: false
               "post_id": string,"reason": string,"repost_note": string,"reposted_by_id": string,"reposted_by_username": string,"score": number
             }[]
                            },
+"inbox_threads":
+{ Args: { "p_before"?: string,"p_folder"?: string,"p_limit"?: number,"p_query"?: string }; Returns: {
+              "id": string,"kind": string,"last_message": Json,"last_message_at": string,"member_count": number,"members": Json,"muted": boolean,"my_role": string,"my_status": string,"photo_path": string,"pinned_at": string,"seen": boolean,"theme": string,"title": string,"unread": boolean,"unread_count": number,"vanish_mode": boolean
+            }[]
+                           },
+"is_flagged_text":
+{ Args: { "p_body": string }; Returns: boolean
+                           },
 "is_valid_caption":
 { Args: { "caption": string }; Returns: boolean
                            },
@@ -1250,6 +1591,12 @@ isOneToOne: false
 "is_valid_username":
 { Args: { "name": string }; Returns: boolean
                            },
+"join_thread_by_invite":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"leave_thread":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
 "mark_activity_seen":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1258,6 +1605,12 @@ isOneToOne: false
                            },
 "mark_stories_viewed":
 { Args: { "p_ids": (string)[] }; Returns: undefined
+                           },
+"mark_thread_read":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
+"message_delivered":
+{ Args: { "p_message": string }; Returns: undefined
                            },
 "my_collab_invites":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -1269,6 +1622,9 @@ isOneToOne: false
               "avatar_path": string,"created_at": string,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"requested": boolean,"username": string
             }[]
                            },
+"my_purgeable_message_files":
+{ Args: Record<PropertyKey, never>; Returns: string[]
+                           },
 "my_purgeable_stories":
 { Args: Record<PropertyKey, never>; Returns: {
               "files": (string)[],"id": string
@@ -1279,8 +1635,24 @@ isOneToOne: false
               "caption": string,"cover_offset": number,"cover_path": string,"id": string,"published_at": string
             }[]
                            },
+"my_thread_status":
+{ Args: { "p_thread": string }; Returns: string
+                           },
 "normalize_hashtag":
 { Args: { "p_name": string }; Returns: string
+                           },
+"note_likers":
+{ Args: { "p_note": string }; Returns: {
+              "avatar_path": string,"full_name": string,"liked_at": string,"user_id": string,"username": string
+            }[]
+                           },
+"note_screenshot":
+{ Args: { "p_message"?: string,"p_thread": string }; Returns: undefined
+                           },
+"notes_tray":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "audience": string,"audio": Json,"author_id": string,"avatar_path": string,"body": string,"created_at": string,"expires_at": string,"full_name": string,"id": string,"like_count": number,"liked": boolean,"username": string
+            }[]
                            },
 "notification_preview":
 { Args: { "p_id": string }; Returns: {
@@ -1290,10 +1662,16 @@ isOneToOne: false
 "notify":
 { Args: { "p_actor": string,"p_at"?: string,"p_audio"?: string,"p_comment"?: string,"p_data"?: Json,"p_post"?: string,"p_recipient": string,"p_story"?: string,"p_type": string }; Returns: undefined
                            },
+"open_message_media":
+{ Args: { "p_message": string }; Returns: boolean
+                           },
 "people_picker":
 { Args: { "p_limit"?: number,"p_search"?: string }; Returns: {
               "avatar_path": string,"full_name": string,"i_follow": boolean,"id": string,"is_close_friend": boolean,"is_favorite": boolean,"username": string
             }[]
+                           },
+"pin_message":
+{ Args: { "p_message": string,"p_pinned": boolean }; Returns: undefined
                            },
 "post_base_score":
 { Args: { "p_comments": number,"p_likes": number,"p_now": string,"p_plays": number,"p_published_at": string,"p_reposts": number }; Returns: number
@@ -1319,6 +1697,11 @@ isOneToOne: false
               "author_id": string,"cover_offset": number,"cover_path": string,"cover_type": string,"id": string,"kind": string,"media_count": number,"play_count": number
             }[]
                            },
+"presence_of":
+{ Args: { "p_users": (string)[] }; Returns: {
+              "last_active_at": string,"user_id": string
+            }[]
+                           },
 "profile_connections":
 { Args: { "p_kind": string,"p_limit"?: number,"p_offset"?: number,"p_search"?: string,"p_user_id": string }; Returns: {
               "avatar_path": string,"followed_at": string,"follows_me": boolean,"full_name": string,"i_follow": boolean,"id": string,"is_private": boolean,"is_self": boolean,"requested": boolean,"username": string
@@ -1339,6 +1722,9 @@ isOneToOne: false
                            },
 "publish_story":
 { Args: { "p_story": string }; Returns: string
+                           },
+"realtime_thread_member":
+{ Args: { "p_active": boolean,"p_topic": string }; Returns: boolean
                            },
 "recent_searches":
 { Args: { "p_limit"?: number }; Returns: {
@@ -1364,12 +1750,43 @@ isOneToOne: false
 "refresh_posts_count":
 { Args: { "p_user": string }; Returns: undefined
                            },
+"remove_thread_member":
+{ Args: { "p_thread": string,"p_user": string }; Returns: undefined
+                           },
 "rename_original_audio":
 { Args: { "p_title": string,"p_track": string }; Returns: string
+                           },
+"rename_thread":
+{ Args: { "p_thread": string,"p_title": string }; Returns: undefined
                            },
 "reorder_post_media":
 { Args: { "p_media": (string)[],"p_post": string }; Returns: undefined
                            },
+"require_thread_member":
+{ Args: { "p_admin"?: boolean,"p_thread": string }; Returns: {
+              "accepted_at": string | null,
+"added_by": string | null,
+"cleared_at": string | null,
+"joined_at": string,
+"joined_via": string,
+"last_read_at": string,
+"left_at": string | null,
+"marked_unread": boolean,
+"muted_until": string | null,
+"nickname": string | null,
+"pinned_at": string | null,
+"read_receipts": boolean,
+"role": string,
+"status": string,
+"thread_id": string,
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "thread_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "respond_collab_invite":
 { Args: { "p_accept": boolean,"p_post": string }; Returns: boolean
                            },
@@ -1411,6 +1828,29 @@ isOneToOne: false
                            },
 "set_comment_pinned":
 { Args: { "p_comment": string,"p_pinned": boolean }; Returns: undefined
+                           },
+"set_nickname":
+{ Args: { "p_nickname": string,"p_thread": string,"p_user": string }; Returns: undefined
+                           },
+"set_thread_admin":
+{ Args: { "p_admin": boolean,"p_thread": string,"p_user": string }; Returns: undefined
+                           },
+"set_thread_approval":
+{ Args: { "p_on": boolean,"p_thread": string }; Returns: undefined
+                           },
+"set_thread_photo":
+{ Args: { "p_path": string,"p_thread": string }; Returns: undefined
+                           },
+"set_thread_theme":
+{ Args: { "p_theme": string,"p_thread": string }; Returns: undefined
+                           },
+"set_vanish_mode":
+{ Args: { "p_on": boolean,"p_thread": string }; Returns: undefined
+                           },
+"share_suggestions":
+{ Args: { "p_limit"?: number,"p_query"?: string }; Returns: {
+              "avatar_path": string,"full_name": string,"kind": string,"last_message_at": string,"members": Json,"photo_path": string,"thread_id": string,"title": string,"user_id": string,"username": string
+            }[]
                            },
 "similar_posts":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_post": string,"p_snapshot"?: string }; Returns: {
@@ -1478,6 +1918,31 @@ isOneToOne: false
                            },
 "sync_post_caption_refs":
 { Args: { "p_caption": string,"p_post": string }; Returns: undefined
+                           },
+"thread_add_members":
+{ Args: { "p_actor": string,"p_ids": (string)[],"p_thread": string,"p_via"?: string }; Returns: number
+                           },
+"thread_broadcast":
+{ Args: { "p_event": string,"p_payload"?: Json,"p_thread": string }; Returns: undefined
+                           },
+"thread_info":
+{ Args: { "p_thread": string }; Returns: Json
+                           },
+"thread_invite_preview":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"thread_join_request_list":
+{ Args: { "p_thread": string }; Returns: {
+              "added_by_username": string,"avatar_path": string,"created_at": string,"full_name": string,"user_id": string,"username": string
+            }[]
+                           },
+"thread_messages":
+{ Args: { "p_before"?: string,"p_filter"?: string,"p_limit"?: number,"p_query"?: string,"p_thread": string }; Returns: {
+              "audio": Json,"body": string,"created_at": string,"data": Json,"duration_ms": number,"edited_at": string,"height": number,"id": string,"kind": string,"media_path": string,"media_type": string,"pinned_at": string,"post_id": string,"profile": Json,"reactions": Json,"reply_to": Json,"scheduled_for": string,"sender_id": string,"story": Json,"thread_id": string,"thumb_path": string,"vanish": boolean,"view_mode": string,"views": Json,"waveform": Json,"width": number
+            }[]
+                           },
+"touch_presence":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "unfollow_user":
 { Args: { "target": string }; Returns: undefined

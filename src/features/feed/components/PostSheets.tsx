@@ -653,9 +653,12 @@ function ShareSheet({
   return (
     <BottomSheet visible onClose={onClose}>
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.lg }}>
-        {/* Send to chats waits for Direct (Phase 9). */}
+        {/* Send to chats (page 76 via the Send to sheet). */}
         <Pressable
-          onPress={() => toast.show('Messages are coming soon')}
+          onPress={() => {
+            onClose();
+            router.push({ pathname: '/direct/send', params: { post: post.id } });
+          }}
           accessibilityRole="button"
           style={[
             styles.sendStub,
@@ -666,13 +669,14 @@ function ShareSheet({
             },
           ]}
         >
-          <Icon name="share" size={22} color={colors.textSecondary} />
+          <Icon name="share" size={22} />
           <View style={{ flex: 1 }}>
             <Text variant="bodyBold">Send to friends</Text>
             <Text variant="caption" color="textSecondary">
-              Sending posts in chats arrives with messages.
+              Share in a chat or group
             </Text>
           </View>
+          <Icon name="chevronRight" size={18} color={colors.textSecondary} />
         </Pressable>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={[styles.topRow, { gap: spacing.lg, paddingBottom: spacing.md }]}>

@@ -238,6 +238,13 @@ export function ProfileOptionsSheet({
         />
         <ActionRow
           icon="sendPlane"
+          label="Send in a message"
+          onPress={after(onClose, () =>
+            router.push({ pathname: '/direct/send', params: { profile: profile.id } }),
+          )}
+        />
+        <ActionRow
+          icon="share"
           label="Share this profile"
           onPress={after(onClose, () => void shareProfile(profile.username))}
         />

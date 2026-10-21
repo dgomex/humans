@@ -4,11 +4,12 @@ import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Icon, Text, UserRow, useToast } from '@/components';
+import { Button, Icon, Text, UserRow } from '@/components';
 import { UploadBanner } from '@/features/create/components/UploadBanner';
 import { feedKeys, useHomeFeed } from '@/features/feed/api';
 import { FeedList } from '@/features/feed/components/FeedList';
 import { ActivityHeart } from '@/features/activity/components/ActivityHeart';
+import { DirectIcon } from '@/features/direct/components/DirectIcon';
 import { useSuggestedAccounts } from '@/features/follows/api';
 import { storyKeys } from '@/features/stories/api';
 import { StoriesTray } from '@/features/stories/components/StoriesTray';
@@ -82,7 +83,6 @@ export default function HomeScreen() {
 
 function HomeHeader() {
   const { colors, spacing, hairline } = useTheme();
-  const toast = useToast();
   const [menu, setMenu] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -108,14 +108,7 @@ function HomeHeader() {
       </Pressable>
       <View style={[styles.row, { gap: spacing.xl }]}>
         <ActivityHeart />
-        <Pressable
-          onPress={() => toast.show('Messages are coming soon')}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Messages"
-        >
-          <Icon name="messenger" size={26} />
-        </Pressable>
+        <DirectIcon />
       </View>
 
       {/* Wordmark ▾ → Following / Favorites (page 51). */}

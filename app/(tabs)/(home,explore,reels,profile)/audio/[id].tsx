@@ -70,7 +70,11 @@ export default function AudioScreen() {
         title=""
         right={
           <View style={{ flexDirection: 'row', gap: spacing.lg }}>
-            <TopBarButton icon="share" label="Share" onPress={share} />
+            <TopBarButton
+              icon="share"
+              label="Send in a message"
+              onPress={() => router.push({ pathname: '/direct/send', params: { audio: id } })}
+            />
             <TopBarButton icon="more" label="More" onPress={() => setMenu(true)} />
           </View>
         }
@@ -150,6 +154,14 @@ export default function AudioScreen() {
             onPress={() => {
               setMenu(false);
               void Clipboard.setStringAsync(audioUrl(id)).then(() => toast.show('Link copied'));
+            }}
+          />
+          <ActionRow
+            icon="share"
+            label="Share to…"
+            onPress={() => {
+              setMenu(false);
+              share();
             }}
           />
           {data?.is_owner && data.source === 'original' ? (

@@ -10,9 +10,10 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { Avatar, Button, Icon, Text, useToast, type IconName } from '@/components';
+import { Avatar, Button, Icon, Text, type IconName } from '@/components';
 import { FollowButton } from '@/features/follows/FollowButton';
 import { postKeys } from '@/features/posts/api';
+import { ProfileNote } from '@/features/direct/components/Notes';
 import { useTheme } from '@/theme';
 
 import {
@@ -173,6 +174,7 @@ function Identity({ profile }: { profile: ProfileDetails }) {
                 : `${profile.username}'s profile picture`
           }
         />
+        <ProfileNote userId={profile.id} isOwn={isOwn} />
         {isOwn ? (
           <Pressable
             onPress={() => router.push('/story/camera')}
@@ -332,7 +334,6 @@ function Actions({
   onToggleSuggestions: () => void;
 }) {
   const { spacing } = useTheme();
-  const toast = useToast();
   const [sheet, setSheet] = useState(false);
   // Optimistic status while the follow mutation runs; the server value wins once it refetches.
   const [override, setOverride] = useState<{ server: FollowStatus; local: FollowStatus } | null>(
@@ -382,7 +383,7 @@ function Actions({
           />
         </View>
       )}
-      <ProfileButton onPress={() => toast.show('Messages are coming soon')}>
+      <ProfileButton onPress={() => router.push(`/direct/u/${profile.id}`)}>
         <Text variant="bodyBold">Message</Text>
       </ProfileButton>
       {suggestButton}

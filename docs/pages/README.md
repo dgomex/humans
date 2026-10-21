@@ -51,7 +51,12 @@ Single source of truth for progress. Update after **every** workflow step.
 - Demo data: `node scripts/seed-activity.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`); log in as `dev.viewer` (Activity) or `cam.private` (follow requests).
 - **Still to verify on a real phone (Expo Go):** long-press → Delete notification sheet + haptics, banner over native screens, Reply → comments sheet with "@user " prefilled and keyboard, Connect contacts card (permission + sync), pull to refresh.
 
-Next: Phase 9 — Direct Messages (`/start-phase 9`): needs Phase 2 (follows) and Phase 4 (sharing posts), both done; it also picks up stored stubs (story replies in `story_replies`, "Send to friends" on posts / reels / stories, profile Message buttons, Home ✈ icon) and can reuse Phase 8's Realtime pattern + notifications table for message requests.
+**Phase 9 — Direct Messages:** built 2026-10-14 (pages 74–81; **82 calls deferred** by decision). Decisions: 74, 75, 77, 78, 79, 80, 81 Full clone (personal-account inbox, no Meta AI / broadcast channels / video or location notes); 76 Changes (no GIFs, translation, voice transcription, message effects).
+- Verified: `node scripts/test-direct-rls.mjs` (158 checks, `--cron` also waits for pg_cron to deliver a scheduled message: 1:1 uniqueness, members-only reads / sends / storage, own member row only, read receipts off, reactions, replies, edit 15 min, pin ≤3, unsend + preview fallback, search, media path / file checks, view-once open once + 5-minute file window + screenshot, voice ≤5 min, shared post visibility, story replies → DMs, requests (one text message, text only, hidden by word list, accept by replying, delete all), pinned chats ≤3, mute / unread, delete for me, groups (request status, rename / theme / nickname system lines, admin-only removal, history from join to leave, approval + join requests, invite links + preview + disable, last admin promotion), vanish mode (groups refused, seen messages vanish), scheduled messages, notes (60 chars, mutuals / Close Friends, one active, likes, note replies), presence, reports, private realtime topics (outsiders can't join), anon blocked). Phase 0–8 scripts still pass, DB lint clean, typecheck + lint clean. Clicked through on web (phone viewport, dark + light): Home ✈ badge → inbox (notes row incl. a song note, pinned / unread / Seen / active dots, Requests (1)), chat (shared post card, photo, reply quote, backfilled story reaction, reactions appearing live, typing indicator live, double-tap ❤️, long-press menu, Edit → "Edited", send with link), details → Theme → system line + new bubble colours, group chat (sender names, nickname, pinned, Ocean theme), request with Block · Delete · Accept, new note → notes row, post share sheet → Send to → group, in-app message banner.
+- Demo data: `node scripts/seed-direct.mjs` after `seed-audio` + `seed-feed` (re-run after every `npx supabase db reset`); log in as `dev.viewer`.
+- **Still to verify on a real phone (Expo Go):** voice recording + playback speed, camera 📷 → View once / Allow replay / Keep in chat, gallery multi-send + video posters, swipe-to-reply + long-press + double-tap feel and haptics, inbox swipe actions, keyboard + composer growth, schedule picker (iOS inline / Android dialogs), screenshot notice (iOS / Android 14+), Save to photos, forwarding media (download → re-upload), group photo pick, invite QR.
+
+Next: Phase 10 — Live (`/start-phase 10`): needs Phase 5 (stories) and a **streaming-provider decision** at research time (same native-module / dev-build question as calls). Alternatively Phase 11 — Settings & Privacy, which now has many stubs waiting (blocks / mutes / restricts, Hidden words, "Who can message you", push + notification settings).
 
 ## Prerequisite stubs
 _Minimal objects created ahead of their owning phase (so they get finished properly later)._
@@ -63,13 +68,13 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | ☰ "Settings and activity" sheet (Saved, Close Friends, Favorites, Follow requests, QR, Log out) | 016 | 11 — Settings (page 86) | Stub: replace with the real Settings hub |
 | `app/follow-requests.tsx` (Confirm / Delete) + `useFollowRequests` | 018 | 8 — Notifications (page 72) | **Resolved** in Phase 8 (`app/activity/requests.tsx`, stub removed) |
 | Temporary "Private account" switch in Edit profile | 018/019 | 11 — Settings (page 91) | Stub: move to Account privacy |
-| Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Wire up when each feature exists |
+| Message button, Mute, Restrict, Block, Report, Hide story entries ("Coming soon") | 017/023 | 4, 5, 9, 11 | Message **resolved** in Phase 9 (+ "Send in a message" in profile options); Mute / Restrict / Block wait for Phase 11 |
 | Highlights editor placeholder (`app/highlights/new.tsx`) | 025 | 5 — Stories | **Resolved** in Phase 5 (editor, `highlight_items`, viewer) |
 | `saved_collection_items.post_id` without FK; collections empty | 026/027 | 3 (FK) / 4 (saves, bookmark) | **Resolved**: FK in Phase 3; `saves`, bookmark and real Saved grids in Phase 4 |
 | Own-post viewer `app/p/[id]` (media, tags, music, caption, ⋯ Edit/Archive/Pin/Hide likes/Commenting/Delete; others: Remove me, About, Report placeholder) | 041 | 4 — Feed (page 44) | **Resolved** by page 44 (own-post menu and "Remove me from post" now live in the shared ⋯ options sheet) |
-| Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | ♡ **resolved** in Phase 8; Direct still a Phase 9 stub |
+| Home header ♡ (Activity) and Direct icons → "coming soon" toast | 043 | 8 — Notifications (71) / 9 — Direct (74) | **Resolved**: ♡ in Phase 8, ✈ + unread badge in Phase 9 |
 | Stories tray shows only your own "Your story" circle (toast) | 043 | 5 — Stories (52/53) | **Resolved** in Phase 5 (real tray, rings, upload progress) |
-| Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | "Add to story" **resolved** (post sticker); "Send to friends" still a Phase 9 stub |
+| Share sheet "Send to friends" + "Add to story" entries (toast) | 048 | 9 — Direct (76/77) / 5 — Stories (54) | **Resolved**: "Add to story" (Phase 5), "Send to friends" → `/direct/send` (Phase 9) |
 | "Mute <user>" (hidden-post panel, report follow-ups), Restrict, Block | 049/050 | 11 — Settings (92–94) | Stub: "coming soon" until `mutes` / `blocks` / `restricts` exist; feeds must then exclude them |
 | Report status / support requests (reports are stored only) | 050 | 11 — Settings (108) | Stub: no moderation UI |
 | `app/collab-invites` (Accept / Decline) + ☰ "Collaboration invites" | 036 | 8 — Notifications (page 71) | **Resolved** in Phase 8 (inline in Activity; stub screen + ☰ entry removed; `my_collab_invites` RPC unused) |
@@ -77,16 +82,23 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 | ☰ menu gains "Archive" (posts + stories archive, page 28) | 041 | 11 — Settings (page 86) / 10 (live archive) | Part of the ☰ stub; stories archive added in Phase 5 |
 | Music on posts = placeholder catalog (`source = placeholder`) | 039 | 6 — Reels (audio page 62) | Audio page built in Phase 6; catalog still generated placeholders — replace with real CC0/licensed tracks |
 | Remix / reel mention notifications (stored, not sent) | 063 | 8 — Notifications (71) | **Resolved** in Phase 8 (remix + audio-use notifications) |
-| Reel share "Send to friends" (DM grid) | 064 | 9 — Direct (76/77) | Stub (same as page 48) |
+| Reel share "Send to friends" (DM grid) | 064 | 9 — Direct (76/77) | **Resolved** in Phase 9 (same share sheet) |
 | Global "Allow remixing" default | 061/063 | 11 — Settings (page 99) | Per-reel toggle only; page 99 adds the account default |
 | Hashtag taps in reel captions / stickers ("coming soon") | 058 | 7 — Explore (68) | Stub |
-| Story replies / quick reactions stored in `story_replies`; story ✈ share, "Send", viewer-row ✈ and share-screen "Send to chats" show "coming soon" | 052/055/056 | 9 — Direct (76) | Stub: move replies into DM threads, wire sending |
+| Story replies / quick reactions stored in `story_replies`; story ✈ share, "Send", viewer-row ✈ and share-screen "Send to chats" show "coming soon" | 052/055/056 | 9 — Direct (76) | **Resolved** in Phase 9 (replies + reactions become DMs, older ones backfilled; ✈ / Send / viewer-row message wired) **except** the story composer's "Send to chats" (page 55), still a stub |
 | Story countdown reminders + mentions stored without notifications | 054 | 8 — Notifications (71) | **Resolved** in Phase 8 (countdowns materialize when the badge is fetched — no server cron yet) |
 | Story ⋯ "Mute" ("coming soon"); hashtag sticker tap ("coming soon") | 052 | 11 — Settings (94) / 7 — Explore (68) | Stub |
 | OS push notifications (tokens, Edge Function fan-out, permission prompt at the end of sign-up) | 071 | 11 — Settings (page 100) | Deferred by decision: in-app alerts only |
 | "Turn off notifications like this" (row menu) and per-category notification prefs | 071 | 11 — Settings (page 100) | Not built; Activity shows every type |
 | Notifications ignore blocks / mutes / restricts | 071 | 11 — Settings (92–94) | Filter actors in `visible_notifications` once those tables exist |
 | Story settings screen lives at `app/story-settings` | 055 | 11 — Settings (page 97) | Page 97 links to it |
+| Voice & video calls: 📞 / 🎥 in chats and chat details show "coming soon" | 076/079 | 9 — Direct (page 82, deferred) | Needs a WebRTC provider decision + EAS dev build + push (page 100) |
+| DM Block / Restrict (request bar, chat details) "coming soon"; requests ignore blocks | 075/079 | 11 — Settings (92–93) | Filter `get_or_create_direct`, message inserts, inbox and presence once `blocks` / `restricts` exist |
+| "Who can message you" / message request controls, Activity status toggle, global read receipts | 075/074/076 | 11 — Settings (page 98) | Today: everyone can send requests, activity status always on, read receipts per chat only |
+| Hidden requests use a built-in word list (`is_flagged_text`) | 075 | 11 — Settings (page 95) | Add each person's Hidden words |
+| No OS push for messages (in-app banner + ✈ badge only) | 074/076 | 11 — Settings (page 100) | Same as the Phase 8 push deferral |
+| Story composer "Send to chats" (send a new story straight to chats) | 055 | 9 — Direct | Stub: needs a hook after the story upload publishes |
+| Vanish mode swipe-up gesture in the chat (toggle lives in chat details) | 079 | 9 — Direct | Add when verifying on device |
 
 ## Phase 0 — Foundation
 
@@ -218,15 +230,15 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 
 | # | Page | Spec | Research | Decision | Built | Verified |
 |---|------|------|----------|----------|-------|----------|
-| 74 | Inbox (chats list, primary/general/requests tabs, notes row) | — | ☐ | — | ☐ | ☐ |
-| 75 | Message requests | — | ☐ | — | ☐ | ☐ |
-| 76 | Chat thread (text, media, voice notes, reactions, replies, shared posts/reels, typing & seen states) | — | ☐ | — | ☐ | ☐ |
-| 77 | New message / select recipients | — | ☐ | — | ☐ | ☐ |
-| 78 | Group chat creation | — | ☐ | — | ☐ | ☐ |
-| 79 | Chat details / settings (mute, members, theme, nickname, vanish mode, block, report) | — | ☐ | — | ☐ | ☐ |
-| 80 | Media viewer in chat (incl. view-once) | — | ☐ | — | ☐ | ☐ |
-| 81 | Notes (create / view) | — | ☐ | — | ☐ | ☐ |
-| 82 | Voice & video call screens | — | ☐ | — | ☐ | ☐ |
+| 74 | Inbox (chats list, primary/general/requests tabs, notes row) | [spec](074-inbox.md) | ☑ | Full clone | ☑ | ◐ |
+| 75 | Message requests | [spec](075-message-requests.md) | ☑ | Full clone | ☑ | ◐ |
+| 76 | Chat thread (text, media, voice notes, reactions, replies, shared posts/reels, typing & seen states) | [spec](076-chat-thread.md) | ☑ | Changes | ☑ | ◐ |
+| 77 | New message / select recipients | [spec](077-new-message.md) | ☑ | Full clone | ☑ | ◐ |
+| 78 | Group chat creation | [spec](078-group-chat-creation.md) | ☑ | Full clone | ☑ | ◐ |
+| 79 | Chat details / settings (mute, members, theme, nickname, vanish mode, block, report) | [spec](079-chat-details.md) | ☑ | Full clone | ☑ | ◐ |
+| 80 | Media viewer in chat (incl. view-once) | [spec](080-chat-media-viewer.md) | ☑ | Full clone | ☑ | ◐ |
+| 81 | Notes (create / view) | [spec](081-notes.md) | ☑ | Full clone | ☑ | ◐ |
+| 82 | Voice & video call screens | [spec](082-calls.md) | ☑ | Deferred | — | — |
 
 ## Phase 10 — Live
 
@@ -273,7 +285,7 @@ _Minimal objects created ahead of their owning phase (so they get finished prope
 |---|---|---|
 | Push notifications (Expo Notifications + Edge Functions) | ☐ | Deferred to page 100 by the Phase 8 decision; Activity uses in-app alerts |
 | Deep links (profile, post, reel, story) | ☐ | |
-| Realtime (DMs, typing, notifications, live comments) | ◐ | Phase 8: `notifications` + `follow_requests` postgres_changes → ♡ badge + in-app banner (`ActivityAlerts`) |
+| Realtime (DMs, typing, notifications, live comments) | ◐ | Phase 8: `notifications` + `follow_requests` postgres_changes → ♡ badge + in-app banner (`ActivityAlerts`). Phase 9: private broadcast topics sent from DB triggers (`realtime.send` → `thread:{id}`, `inbox:{user}`, guarded by `realtime.messages` RLS), client typing broadcasts, `DirectAlerts` banner + ✈ badge, presence heartbeat |
 | Media pipeline (compression, thumbnails, video) | ◐ | Phase 6: reels are an edit list played live (clips as recorded + document), covers rendered 1080 px, voiceovers uploaded as recorded; no encoding. Phase 3: photos cropped + resized to 1080 px JPEG on device; video uploaded as recorded (≤60 s) with an on-device poster; no server transcoding. Phase 5: stories reuse it (photos 1080 px, Boomerang frames / photo stickers 720 px) |
 | Feed ranking / Explore recommendations | ◐ | Phase 4: SQL-ranked Home (`home_feed`) + suggested posts (`suggested_posts`) with impressions and hides. Phase 7: `explore_grid` (engagement × interest affinity from hashtags / authors / follows-of-follows) and `similar_posts`; all SQL, no ML |
 | Moderation & reporting backend | ◐ | Phase 4: `reports` table + report flow (stored only, reporter's feeds hide the post); no review tooling |

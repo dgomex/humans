@@ -107,14 +107,16 @@ function Report() {
     type === 'profile' ||
     type === 'story' ||
     type === 'audio' ||
-    type === 'hashtag'
+    type === 'hashtag' ||
+    type === 'message' ||
+    type === 'thread'
       ? type
       : 'post';
   const { colors, spacing } = useTheme();
   const toast = useToast();
   const report = useReport();
   const [step, setStep] = useState<Step>({ kind: 'reasons' });
-  const noun = target === 'profile' ? 'account' : target;
+  const noun = target === 'profile' ? 'account' : target === 'thread' ? 'group chat' : target;
 
   function submit(reason: Reason, sub?: string) {
     report.mutate(
@@ -269,7 +271,7 @@ function Done({ target, id }: { target: ReportTarget; id: string }) {
         </Text>
         <Text color="textSecondary" style={styles.text}>
           We&apos;ll use it to help keep the community safe.
-          {target === 'story' || target === 'hashtag'
+          {target === 'story' || target === 'hashtag' || target === 'message' || target === 'thread'
             ? ''
             : ` You won't see this ${target === 'profile' ? 'account' : target} in your feed anymore.`}
         </Text>
